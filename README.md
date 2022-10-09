@@ -1,8 +1,7 @@
 # SpArX: Sparse Argumentative eXplanations for Neural Networks
 
 ## Packages:
-Please use the "all" virtual environment provided here. It has customized version of torchvision 
-that supports Iris, Cancer and COMPAS dataset. The python version is 3.6. 
+The python version is 3.6. 
 
 ## Datasets:
 1. COMPAS Dataset
