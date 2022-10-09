@@ -44,20 +44,3 @@ Currently the explain_instance function use the label=1 which means that it only
 
 
 This way we can compute the unfaithfulness of LIME method.
-
-### Model Compression Technique (HAP)
-Please use the "all" virtual environment in the HAP-main project provided here. 
-It has customized version of torchvision 
-that supports Iris, Cancer and COMPAS dataset. The python version is 3.6. 
-
-Please download the HAP project from this link: https://drive.google.com/file/d/1RjhPlKdHNHO738kt70_phtlO8z85Lay-/view
-
-This project uses the code from GitHub repository of Hessian-Aware Pruning (HAP) paper.
-
-We have included HAP-main.rar file in this project, it has an additional python file to compute (structural) unfaithfulness. 
-Please extract is as a separate project and for each dataset (dataset_name = iris, cancer, compas) run the python codes as follows:
-
-* python main_pretrain --batch_size 2 --learning_rate 0.001 --weight_decay 0.00002 --dataset dataset_name --epoch 200 --neurons 50
-Now set different prunning ratios and run the following script. Here, we have used 0.2 ratio. In the experiments, we have used 0.2, 0.4, 0.6 and 0.8 ratio. 
-* python main_prune --network mlp --depth 2 --dataset dataset_name --batch-size 8 --learning-rate 0.001 --weight-decay 4e-4 --ratio 0.2 --use-decompose 0 --gpu "0" --neurons 50
-
