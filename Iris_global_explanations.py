@@ -30,6 +30,36 @@ import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
 
+from datetime import datetime, date, timedelta
+import string, pickle, json, sys, os, itertools, random, math, time, re, hashlib, warnings, subprocess
+
+from keras.utils import plot_model
+import os
+import copy
+import utility_functions
+
+
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.naive_bayes import CategoricalNB
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import classification_report
+
+# Model Creation
+from keras.models import Sequential, Model
+from keras.layers import Dense, Embedding, Conv1D, GlobalMaxPool1D, Input, concatenate, Dropout, Activation
+
+# Model Training
+from keras.callbacks import ModelCheckpoint, EarlyStopping
+
+from sklearn.cluster import KMeans, AgglomerativeClustering
+
+"""
+------------------------------------------
+Hyper Params + setup
+------------------------------------------
+"""
+
 pd.set_option('display.max_columns', 50)
 pd.set_option('display.max_rows', 35)
 
@@ -48,22 +78,17 @@ pruning_ratio = 0.5
 
 preserve_percentage = 100 - Shrinkage_percentage
 
-# import plotly.express as px
-# from plotly.subplots import make_subplots
-# import plotly.graph_objects as go
-
-from datetime import datetime, date, timedelta
-import string, pickle, json, sys, os, itertools, random, math, time, re, hashlib, warnings, subprocess
-
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.naive_bayes import CategoricalNB
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import classification_report
+EPOCHS = 1000
+PATIENCE = 20
+BATCH_SIZE = 64
 
 os.environ['PYTHONHASHSEED'] = '0'
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
+
+# setup code
+# making sure gpu donm't run out of memeory
+# seed random
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", category=FutureWarning)
 
@@ -82,6 +107,13 @@ with warnings.catch_warnings():
     # Check that we are using the standard configuration for channels
     assert K.image_data_format() == 'channels_last'
 
+
+"""
+------------------------------------------
+pre-processing
+------------------------------------------
+"""
+
 RESULT_PATH = './results'
 
 if not os.path.exists(RESULT_PATH):
@@ -89,6 +121,7 @@ if not os.path.exists(RESULT_PATH):
 
 
 def load_iris():
+    # class could be one of ['Iris-setosa', 'Iris-versicolor', 'Iris-versicolor']
     columns_names = ["sepal length", "sepal width", "petal length", "petal width", "class"]
     df = pd.read_csv('data/iris.data', header=None, names=columns_names)
     return df
@@ -96,13 +129,8 @@ def load_iris():
 
 # Load and plot
 data = load_iris()
-# ploly_df(data)
-CLASS = ["class"]
-
-# Split X and y
 X = data.drop(columns=CLASS)
-y = data[CLASS]
-# class_names = ['Iris-setosa', 'Iris-versicolor', 'Iris-versicolor']
+y = data[["class"]]
 
 # Randomize
 X = X.sample(frac=1, random_state=2020)
@@ -111,46 +139,15 @@ X.reset_index(inplace=True, drop=True)
 y.reset_index(inplace=True, drop=True)
 
 # # One-hot
-# data_onehot = pd.get_dummies(data)
-# X_onehot = pd.get_dummies(X)
 y_onehot = pd.get_dummies(y)
+
 
 X_train, X_test, y_train, y_test, data_train, data_test, y_onehot_train, y_onehot_test = \
     train_test_split(X, y, data, y_onehot, test_size=.2, random_state=2, shuffle=True)
-print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
 
 
-class MultiColumnLabelEncoder:
-    def __init__(self, columns):
-        self.columns = columns  # array of column names to encode
-        self.encoders = []
 
-    def fit(self, X, y):
-        return self
-
-    def transform(self, X):
-        '''
-        Transforms columns of X specified in self.columns using
-        LabelEncoder(). If no columns specified, transforms all
-        columns in X.
-        '''
-        output = X.copy()
-        if self.columns is not None:
-            for col in self.columns:
-                le = LabelEncoder()
-                self.encoders.append(le)
-                output[col] = le.fit_transform(output[col])
-        return output
-
-    def fit_transform(self, X, y=None):
-        return self.fit(X, y).transform(X)
-
-
-# Model Creation
-from keras.models import Sequential, Model
-from keras.layers import Dense, Embedding, Conv1D, GlobalMaxPool1D, Input, concatenate, Dropout, Activation
-
-
+# metric functions
 def recall_m(y_true, y_pred):
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
@@ -158,6 +155,7 @@ def recall_m(y_true, y_pred):
     return recall
 
 
+# metric functions
 def precision_m(y_true, y_pred):
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
@@ -165,6 +163,14 @@ def precision_m(y_true, y_pred):
     return precision
 
 
+""" 
+------------------------------------------
+Model Creation + Training
+------------------------------------------ 
+"""
+
+
+# Creates a neural network model
 def get_FFNN_model(X, y, hidden_layers_size=[4]):
     """
         BASIC MODEL for the FF-NN
@@ -184,23 +190,19 @@ def get_FFNN_model(X, y, hidden_layers_size=[4]):
         for hidden_size in hidden_layers_size[1:]:
             ff_layers.insert(-1, Dense(hidden_size, activation='relu'))
 
-    print(ff_layers)
     model = Sequential(ff_layers)
+
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
                   metrics=['accuracy', recall_m, precision_m])
+    
     model.summary()
+    
     return model
 
 
-# Model Training
-from keras.callbacks import ModelCheckpoint, EarlyStopping
 
-EPOCHS = 1000
-PATIENCE = 20
-BATCH_SIZE = 64
-
-
+# train the network
 def net_train(model, bestmodel_path, X_train, y_train_onehot, X_validate, y_validate_onehot, epochs=EPOCHS):
     # Define four callbacks to use
     checkpointer = ModelCheckpoint(filepath=bestmodel_path, verbose=1, save_best_only=True)
@@ -213,13 +215,12 @@ def net_train(model, bestmodel_path, X_train, y_train_onehot, X_validate, y_vali
     return history
 
 
-
-
 model = get_FFNN_model(X, y_onehot, HIDDEN_LAYERS)
 
 model_path = os.path.join(RESULT_PATH, 'global_net_iris.h5')
 forge_gen = False
 
+# Loads the model if already exists and trained, if not train it and save it
 if not os.path.exists(model_path) or forge_gen:
     history = net_train(model, model_path, X_train, y_onehot_train, X_test, y_onehot_test)
 
@@ -234,27 +235,24 @@ if not os.path.exists(model_path) or forge_gen:
 else:
     print('Model loaded.')
     model.load_weights(model_path)
+
+
 predictions = np.argmax(model.predict(X_test), axis=1)
 y_pred = np.eye(np.max(predictions) + 1)[predictions]
 # y_test_labels = np.argmax(y_onehot_test.values, axis=1)
 print("Classification report for the original model.")
 print(classification_report(y_onehot_test, y_pred, digits=4))
 
-from keras.utils import plot_model
-import os
-
+# TODO: change this
 os.environ["PATH"] += os.pathsep + 'C:/Program Files/Graphviz/bin/'
 plot_model(model, to_file=RESULT_PATH + '/model.png', show_shapes=True, show_layer_names=False)
 
 
-# print(yes_activations)
-
-# def clustering_nodes(preserve_percentage, HIDDEN_LAYERS, activation):
-#     # Shrink the network using the Kmeans clustering below.
-#     from sklearn.cluster import KMeans
-#     kmeans = KMeans(n_clusters=int((preserve_percentage / 100) * HIDDEN_LAYERS[0]), random_state=1).fit(
-#         activation.T)
-#     return kmeans.labels_
+""" 
+------------------------------------------
+Clustering methods
+------------------------------------------
+"""
 
 # clusting each hidden layer based on its activation (global clustering)
 def clustering_nodes(preserve_percentage, NUMBER_OF_NODES_IN_HIDDEN_LAYER, activations, clustering_algorithm="kmeans"):
@@ -269,7 +267,6 @@ def clustering_nodes(preserve_percentage, NUMBER_OF_NODES_IN_HIDDEN_LAYER, activ
     #         For the second layer the third and the fourth nodes are assigned to the first cluster (0)
     #         and the first and the last nodes are assigned to the second cluster (1)
     #         and the second and the fifth are assigned to the third cluster (2).  .
-    from sklearn.cluster import KMeans, AgglomerativeClustering
     clustering_labels = []
     for index, hidden_layer in enumerate(NUMBER_OF_NODES_IN_HIDDEN_LAYER):
         activation = activations[index]
@@ -286,124 +283,6 @@ def clustering_nodes(preserve_percentage, NUMBER_OF_NODES_IN_HIDDEN_LAYER, activ
             clustering = AgglomerativeClustering(n_clusters=n_clusters_).fit(clustering_input)
         clustering_labels.append(clustering.labels_)
     return clustering_labels
-
-
-def clustering_nodes_with_zeros_activations_as_one_cluster(preserve_percentage, HIDDEN_LAYERS, activation):
-    mean_activation = np.mean(activation, axis=0)
-    threshold = 0.1
-    probably_not_zero_activations = np.where([mean_activation > threshold])[1]
-    from sklearn.cluster import KMeans
-    kmeans = KMeans(n_clusters=int((preserve_percentage / 100) * HIDDEN_LAYERS[0]) - 1, random_state=1).fit(
-        activation[:, probably_not_zero_activations].T)
-    labels_after_adding_cluster_of_zeros = []
-    label_index = 0
-    for idx, activation in enumerate(mean_activation):
-        if activation <= threshold:
-            labels_after_adding_cluster_of_zeros.append(0)
-        else:
-            labels_after_adding_cluster_of_zeros.append(kmeans.labels_[label_index] + 1)
-            label_index += 1
-
-    return np.array(labels_after_adding_cluster_of_zeros)
-
-
-import copy
-
-
-def turn_off_specific_node_and_see_output(model, input, node_layer, node_indices_list, node_index):
-    new_model = keras.models.clone_model(model)
-    new_model.set_weights(model.get_weights())
-    node_indices_list = list(np.where(node_indices_list == True)[0])
-    predictions = np.argmax(model.predict(input),axis=1)
-    new_weights = copy.deepcopy(model.layers[node_layer + 1].get_weights())
-    for index in node_indices_list:
-        if node_indices_list[node_index] != index:
-            new_weights[0][index] = 0
-        else:
-            new_weights[0][index] = np.sum(model.layers[node_layer + 1].get_weights()[0][node_indices_list])
-    new_model.layers[node_layer + 1].set_weights(new_weights)
-    new_predictions = np.argmax(new_model.predict(input),axis=1)
-    changes_counter = 0
-    for index, prediction in enumerate(list(predictions)):
-        if prediction != new_predictions[index]:
-            changes_counter += 1
-    return changes_counter
-
-
-
-import utility_functions
-def merge_nodes_globally(X_onehot, y_onehot, activations, model, shrunken_model, preserve_percentage, HIDDEN_LAYERS,
-                clustering_labels):
-    # Based on the clustering step, we now shrink the model.
-    # The strategy is to keep the a node from each cluster in the
-    # hidden layer (and average the connecting weights of the input to the hidden layer and the biases) and
-    # in the outgoing weights layer compute the activations based on this equation w* = (W.H)/h*.
-    input_size = len(X_onehot.columns.values)
-    output_size = len(y_onehot.columns.values)
-    # input = np.array(X_onehot)[example_index]
-    all_inputs = np.array(X_onehot)
-    weights = []
-    outgoing_weights = [[model.layers[0].get_weights()[0]]]
-    biases = []
-    epsilon = 1e-30
-    all_layer_sizes = [input_size]
-    for hidden_layer in HIDDEN_LAYERS:
-        all_layer_sizes.append(hidden_layer)
-    all_layer_sizes.append(output_size)
-
-    for index, hidden_layer in enumerate(HIDDEN_LAYERS):
-        weights.append([])
-        biases.append([])
-        outgoing_weights.append([])
-        for label in range(0, int((preserve_percentage / 100) * HIDDEN_LAYERS[index])):
-            if len(np.vstack(outgoing_weights[index]).T[clustering_labels[index] == label]) != 0:
-                weights[index].append(
-                    np.mean(np.vstack(outgoing_weights[index]).T[clustering_labels[index] == label], axis=0))
-                biases[index].append(np.mean(model.layers[index].get_weights()[1][clustering_labels[index] == label]))
-                current_weights = shrunken_model.layers[index].get_weights()[0]
-                current_biases = shrunken_model.layers[index].get_weights()[1]
-                current_weights[:, label] = weights[index][label]
-                current_biases[label] = biases[index][label]
-                new_weights = shrunken_model.get_weights()
-                new_weights[2 * index] = current_weights
-                new_weights[2 * index + 1] = current_biases
-                shrunken_model.set_weights(new_weights)
-                # h_star_1 = max(np.dot(input, weights[index][label])+biases[index][label], 0)
-                h_star = utility_functions.compute_activations_for_each_layer(shrunken_model, all_inputs)[index][:, label]
-                                                                              #input.reshape((1, -1)))[index][0, label]
-                all_hidden_activations = activations[index][:, clustering_labels[index] == label]
-                # h_star += epsilon
-                h_star = np.array([1 if h_s == 0 else h_s for h_s in list(h_star)])
-                activations_divided_by_h_star = np.multiply(all_hidden_activations.T, 1 / h_star).T
-
-                outgoing_weights[index + 1].append(np.mean(np.dot(activations_divided_by_h_star,
-                                                          model.layers[index + 1].get_weights()[0][
-                                                              clustering_labels[index] == label]), axis=0).reshape((1, -1)))
-            else:
-                weights[index].append(np.zeros(input_size) if index == 0 else np.zeros(
-                    int((preserve_percentage / 100) * HIDDEN_LAYERS[index - 1])))
-                biases[index].append(0.0)
-                outgoing_weights[index + 1].append(np.zeros((1, all_layer_sizes[index + 2])))
-                current_weights = shrunken_model.layers[index].get_weights()[0]
-                current_biases = shrunken_model.layers[index].get_weights()[1]
-                current_weights[:, label] = weights[index][label]
-                current_biases[label] = biases[index][label]
-                new_weights = shrunken_model.get_weights()
-                new_weights[2 * index] = current_weights
-                new_weights[2 * index + 1] = current_biases
-                shrunken_model.set_weights(new_weights)
-
-    biases.append([model.layers[len(HIDDEN_LAYERS)].get_weights()[1]])
-    weights.append(outgoing_weights[-1])
-    # -1 to skip the last one which is already in correct shape.
-    for index in range(len(weights)):
-        if index == len(weights) - 1:
-            weights[index] = np.vstack(weights[index])
-        else:
-            weights[index] = np.vstack(weights[index]).T
-        biases[index] = np.vstack(biases[index]).reshape(-1, )
-
-    return weights, biases, input_size, output_size
 
 
 # merge the nodes at each cluster and recompute the incoming and outgoing weights of edges
@@ -440,94 +319,6 @@ def merge_nodes(X_onehot, y_onehot, activations, model, preserve_percentage, HID
     return weights, biases, input_size, output_size
 
 
-def sigmoid(z):
-    return 1 / (1 + np.exp(-z))
-
-
-def compare_shrinked_with_original(y_ground_truth, y_pred_original_model, y_pred_shrinked_model, shrink_percentage):
-    false_predictions = 0
-    better_predictions = 0
-    false_yes = 0
-    false_no = 0
-    true_yes = 0
-    true_no = 0
-    y_ground_truth = y_ground_truth.replace({
-        'Yes': True,
-        'No': False
-    })
-    for i in range(len(y_ground_truth)):
-        if y_pred_original_model[i] == False and y_pred_shrinked_model[i] == True:
-            false_yes += 1
-        elif y_pred_original_model[i] == True and y_pred_shrinked_model[i] == False:
-            false_no += 1
-        elif y_pred_original_model[i] == True and y_pred_shrinked_model[i] == True:
-            true_yes += 1
-        elif y_pred_original_model[i] == False and y_pred_shrinked_model[i] == False:
-            true_no += 1
-
-    print('confusion_matrix: shrinked_model vs original_model')
-    print(' New  |   Yes   |   No  |')
-    print("__________________________")
-    print('  Yes |  ' + str(true_yes) + '   |  ' + str(false_no) + '  |')
-    print('  No  |    ' + str(false_yes) + '   |  ' + str(true_no) + ' |')
-    print(' Orig |')
-
-    print(
-        'Shrinked Model vs Original: they are {percentage:.2f} % the same.\n Notice that the number of nodes are {reduce:.0f} % reduced.'.format(
-            percentage=(100 * (1 - (false_yes + false_no) / (true_yes + true_no))), reduce=shrink_percentage))
-
-
-def divide_two_classes(Y_GT, Y_Pred):
-    Y_GT = np.array(Y_GT)
-    confusion = np.zeros((2, 2))
-    for i in range(len(np.array(Y_GT))):
-        if Y_GT[i] == 'No' and Y_Pred[i] == False:
-            confusion[0, 0] += 1
-        elif Y_GT[i] == 'No' and Y_Pred[i] == True:
-            confusion[0, 1] += 1
-        elif Y_GT[i] == 'Yes' and Y_Pred[i] == True:
-            confusion[1, 1] += 1
-        else:
-            confusion[1, 0] += 1
-
-    return confusion
-
-
-def plot_confusion(confusion_array):
-    import seaborn as sn
-    import pandas as pd
-    import matplotlib.pyplot as plt
-
-    df_cm = pd.DataFrame(confusion_array, index=[i for i in ['Yes_GT', 'No_GT']],
-                         columns=[i for i in ['Yes_Pred', 'No_Pred']])
-    plt.figure(figsize=(10, 7))
-    sn.heatmap(df_cm, annot=True, fmt='g')
-    plt.show()
-    # plt.show(block=False)
-
-def relu(x):
-    return (abs(x) + x) / 2
-
-def softmax(z):
-    assert len(z.shape) == 2
-    s = np.max(z, axis=1)
-    s = s[:, np.newaxis] # necessary step to do broadcasting
-    e_x = np.exp(z - s)
-    div = np.sum(e_x, axis=1)
-    div = div[:, np.newaxis] # dito
-    return e_x / div # only difference
-
-def compute_feature_attribution_scores(weights, activations,biases):
-    activated_weights = []
-    for index, activation in enumerate(activations):
-        activated_weights.append(np.multiply(np.array(weights[index]), activation).T)
-
-    activated_weights_mul = np.dot(weights[0].T, weights[1].T)#activated_weights[0], activated_weights[1]) #double checked
-    # sfmx = softmax(np.reshape(np.sum(activated_weights_mul, axis=0), (1,-1)))
-    feature_attribution_scores = np.sum(activated_weights_mul, axis=1)#/np.sum(activated_weights_mul)
-    return feature_attribution_scores
-
-
 
 activations = utility_functions.compute_activations_for_each_layer(model, X_test.values)
 
@@ -554,6 +345,13 @@ for Shrinkage_percentage in np.arange(20, 90, 20):
         HIDDEN_LAYERS,
         clustering_labels)
 
+
+    """ 
+    ---------------------------
+    Visualize the shrinked model
+    ---------------------------
+    """
+
     truncated_weights = []
     for index, weight in enumerate(weights):
         truncated_weights.append(weight)
@@ -575,7 +373,6 @@ for Shrinkage_percentage in np.arange(20, 90, 20):
     print("Now let's compare the original model and the shrunken model")
     print(classification_report(y_pred, y_shrinked_pred, digits=4))
 
-    from sklearn.utils.extmath import softmax
 
     quantile_threshold = 0.5
     FASs = []
@@ -626,10 +423,6 @@ for Shrinkage_percentage in np.arange(20, 90, 20):
                                                              Shrinkage_percentage,
                                                              'iris_global_graphs(original_model)', test_index, clustering_labels)
 
-
-
-    from html2image import Html2Image
-    hti = Html2Image()
     css = "body {background: white;}"
     class_names = ['Iris-setosa', 'Iris-versicolor', 'Iris-versicolor']
 
@@ -661,11 +454,4 @@ for Shrinkage_percentage in np.arange(20, 90, 20):
 
 print(Shrinkage_percentage_list)
 print(overal_unfaithfulness_list)
-# plt.show()
-# plt.plot(Shrinkage_percentage_list, overal_unfaithfulness_list)
-# plt.xlabel('Compression Ratio')
-# plt.ylabel('Unfaithfulness')
-# plt.ylim([0,1])
-# plt.show()
-
 

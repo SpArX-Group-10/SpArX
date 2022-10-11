@@ -1,0 +1,17 @@
+# I 4
+# H 50 
+# H 50
+# O 3
+
+# Sequential([
+#     Input(4, ...),
+#     Dense(50, ...),
+#     Dense(50, ...),
+#     Dense(3, ...),
+#     Sigmoid(), # Activaiton
+# ])
+
+
+# Create model in any framework or load model from any framework?
+#   + inference on that framework?
+
