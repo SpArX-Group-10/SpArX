@@ -6,6 +6,6 @@ results
 *shrunken_model*
 /*env*/*
 .vscode/*
-/Lib
+/Lib/site-packages
 /Scripts
 pyvenv.cfg
