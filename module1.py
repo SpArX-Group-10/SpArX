@@ -132,7 +132,7 @@ def get_FFNN_model_general(X: DataFrame, y: DataFrame, activation_funcs: list[st
         ff_layers = [Dense(output_size, input_shape=(input_size,), activation='softmax')]
 
     else:
-        # With sigmoid hidden layers
+        # With activation functions provided hidden layers
         ff_layers = [
             Dense(hidden_layers_size[0], input_shape=(input_size,), activation="relu"),
             Dense(output_size, activation='sigmoid')
