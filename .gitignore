@@ -1,0 +1,7 @@
+__pycache__
+.vscode/
+*.png
+*venv*
+results
+*original_model*
+*shrunken_model*

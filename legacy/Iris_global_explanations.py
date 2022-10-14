@@ -78,7 +78,7 @@ pruning_ratio = 0.5
 
 preserve_percentage = 100 - Shrinkage_percentage
 
-EPOCHS = 1000
+EPOCHS = 10
 PATIENCE = 20
 BATCH_SIZE = 64
 
@@ -129,7 +129,7 @@ def load_iris():
 
 # Load and plot
 data = load_iris()
-X = data.drop(columns=CLASS)
+X = data.drop(columns="class")
 y = data[["class"]]
 
 # Randomize
@@ -392,7 +392,7 @@ for Shrinkage_percentage in np.arange(20, 90, 20):
         quantile = np.quantile(np.abs(np.array(all_weights)).reshape(1, -1), pruning_ratio)
         weight_threshold = quantile
 
-        from plot_QBAF import visualize_attack_and_supports_QBAF, general_method_for_visualize_attack_and_supports_QBAF
+        from plot_QBAF import general_method_for_visualize_attack_and_supports_QBAF
 
         general_method_for_visualize_attack_and_supports_QBAF(input, output, shrinked_model, feature_names,
                                                               number_of_hidden_nodes,
