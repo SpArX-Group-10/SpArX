@@ -1,6 +1,5 @@
 from enum import Enum, auto
 
-
 from tensorflow import keras
 from typing import Optional, Union
 
@@ -27,17 +26,24 @@ class Model:
             case _:
                 raise NotImplementedError("Framework not supported!")
     
-    @staticmethod
-    def is_keras_model_mlp(model: keras.Model) -> bool:
-        # TODO: handle custom objects (model, layer, etc)
-        # Check that model is type Sequential, and layer is of type Dense
+    
+    """
+        TODO: handle custom objects (model, layer, etc)
+        Check that model is type Sequential, and layer is of type Dense
         return isinstance(model, keras.Model.Sequential) and all((isinstance(layer, keras.layers.Dense) for layer in model.layers))
 
-        # validate its an mlp:
-        # (to research)
-        # - check first layer is input layer
-        # - check rest of the layers are dense???
-        # - right now all layers seem to be dense layers
+        validate its an mlp:
+        (to research)
+        - check layers are dense???
+        - right now all layers seem to be dense layers
+    """ 
+    @staticmethod
+    def is_keras_model_mlp(model: keras.Model) -> bool:
+        for layer in model.layers:
+            if not isinstance(layer, keras.layers.Dense):
+                return False
+        return True
+
 
     @staticmethod
     def activation_to_str(activation) -> str:
