@@ -7,9 +7,11 @@ from keras.layers import Dense, Embedding, Conv1D, GlobalMaxPool1D, Input, conca
 from sklearn.datasets import load_breast_cancer
 import pandas as pd
 from pd import DataFrame
+from typing import Tuple
 
 import compas_load_and_preprocess
 
+## Added code 
 class Framework(Enum):
     KERAS = auto()
    
@@ -17,15 +19,20 @@ class Framework(Enum):
 # - Dataset
 # - number of layers for MLP
 # - number of hidden neurons for each hidden layer
-# - activation function for MLP
+# - activation functions for MLP
+
+def train_model(dataset: str, activation_functions: list[str], hidden_layers_size: list[int]):
+    X, y = import_dataset(dataset)
+    model = get_FFNN_model_general(X, y, activation_functions, hidden_layers_size)
+    return model
+
+# TODO: import dataset from file path to pandas dataframe
+def import_dataset(dataset: str) -> Tuple[DataFrame, DataFrame]:
+    return (None, None)
+
 
 # Approach 2: Pretrained model
 # - What attributes do team2 need?
-
-## Added code 
-def import_dataset(data):
-    # TODO
-    return None 
 
 # Import from keras
 def import_model(framework: Framework, filepath: str):
@@ -119,7 +126,7 @@ def get_FFNN_model(X, y, hidden_layers_size=[4]):
     return model
 
 
-# constructing model. Structure: input, multiple hidden layers(relu), output(relu, sigmoid)
+# constructing model. Structure: input, multiple hidden layers, output
 def get_FFNN_model_general(X: DataFrame, y: DataFrame, activation_funcs: list[str], hidden_layers_size: list[int]) -> Model:
     """
         BASIC MODEL for the FF-NN
