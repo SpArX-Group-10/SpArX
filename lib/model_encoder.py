@@ -18,6 +18,9 @@ class Model:
         match framework:
             case Framework.KERAS:
             # Validation
+                if not isinstance(model, keras.Model):
+                    raise ValueError("Model is not a Keras model!")
+
                 if not Model.is_keras_model_mlp(model):
                     raise ValueError("Model does not conform to MLP!")
 
