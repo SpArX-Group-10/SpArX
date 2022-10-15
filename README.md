@@ -1,7 +1,9 @@
 # SpArX: Sparse Argumentative eXplanations for Neural Networks
 
+![CI](https://github.com/SpArX-Group-10/SpArX/actions/workflows/pylint.yml/badge.svg)
+
 ## Packages:
-The python version is 3.6. 
+The python version is 3.10.0. 
 
 ## Datasets:
 1. COMPAS Dataset
