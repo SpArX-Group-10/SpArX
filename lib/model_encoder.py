@@ -23,7 +23,7 @@ class Model:
                     raise ValueError("Model does not conform to MLP!")
 
             # Transformation
-                return Model.get_model_info(model)
+                return Model.get_keras_model_info(model)
             case _:
                 raise NotImplementedError("Framework not supported!")
     
@@ -41,29 +41,37 @@ class Model:
 
     @staticmethod
     def activation_to_str(activation) -> str:
+        # sigmoid, leaky relu (not implemented), elu, 
         if isinstance(activation, keras.activations.softmax):
             return "softmax"
         elif isinstance(activation, keras.activations.relu):  
             return "relu" 
         elif isinstance(activation, keras.activations.tanh):  
             return "tanh"
+        elif isinstance(activation, keras.activation.sigmoid):
+            return "sigmoid"
         else:
             raise NotImplementedError("Activation function not supported.")  
-    
-    # Return shape, weights, bias, activation functions
+
+    # Return shape, weights, bias, activation functions from a keras model
     @staticmethod
-    def get_model_info(model: keras.Model):
+    def get_keras_model_info(model: keras.Model):
         layers = model.layers
         num_layers: int = len(layers)
-        weight_paths = model.get_weight_paths()
         layer_shapes = []
-        kernels = []
+        weights = []
         biases = []
         activation_functions = []
+
         for (i, layer) in enumerate(layers):
             layer_shapes.append(layer.output_shape)
-            kernels.append(weight_paths[i*2])
-            biases.append(weight_paths[i*2+1])
-            activation_functions.append(Model.activation_to_str(layer.activation))
-        return (num_layers, layer_shapes, kernels, biases, activation_functions)
 
+            # if keras don't use numpy in the future, we change this part
+            w = layer.get_weights()[0]
+            b = layer.get_weights()[1]
+            weights.append(w)
+            biases.append(b)
+
+            activation_functions.append(Model.activation_to_str(layer.activation))
+
+        return (num_layers, layer_shapes, weights, biases, activation_functions)
