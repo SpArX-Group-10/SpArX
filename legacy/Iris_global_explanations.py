@@ -423,10 +423,11 @@ def merge_nodes_globally(
     # equation w* = (W.H)/h*.
     input_size = len(X_onehot.columns.values)
     output_size = len(y_onehot.columns.values)
-    # input = np.array(X_onehot)[example_index]
-    all_inputs = np.array(X_onehot)
+    # weights of the final clustered FFNN
     weights = []
-    outgoing_weights = [[model.layers[0].get_weights()[0]]]
+    # intermediate state of weights -- when hidden layer n has but clustered
+    # but layer n + 1 has not been clustered yet
+    outgoing_weights = [[model.layers[0].get_weights()[0]]]  
     biases = []
     epsilon = 1e-30
     all_layer_sizes = [input_size]
@@ -435,57 +436,20 @@ def merge_nodes_globally(
     all_layer_sizes.append(output_size)
 
     for index, hidden_layer in enumerate(HIDDEN_LAYERS):
+        # create new dimension (i.e. index hidden layer)
         weights.append([])
         biases.append([])
         outgoing_weights.append([])
-        for label in range(
-            0, int(
-                (preserve_percentage / 100) * HIDDEN_LAYERS[index])):
-            if len(np.vstack(
-                    outgoing_weights[index]).T[clustering_labels[index] == label]) != 0:
-                weights[index].append(np.mean(np.vstack(
-                    outgoing_weights[index]).T[clustering_labels[index] == label], axis=0))
-                biases[index].append(np.mean(model.layers[index].get_weights()[
-                                     1][clustering_labels[index] == label]))
-                current_weights = shrunken_model.layers[index].get_weights()[0]
-                current_biases = shrunken_model.layers[index].get_weights()[1]
-                current_weights[:, label] = weights[index][label]
-                current_biases[label] = biases[index][label]
-                new_weights = shrunken_model.get_weights()
-                new_weights[2 * index] = current_weights
-                new_weights[2 * index + 1] = current_biases
-                shrunken_model.set_weights(new_weights)
-                # h_star_1 = max(np.dot(input, weights[index][label])+biases[index][label], 0)
-                h_star = utility_functions.compute_activations_for_each_layer(
-                    shrunken_model, all_inputs)[index][:, label]
-                # input.reshape((1, -1)))[index][0, label]
-                all_hidden_activations = activations[index][:,
-                                                            clustering_labels[index] == label]
-                # h_star += epsilon
-                h_star = np.array(
-                    [1 if h_s == 0 else h_s for h_s in list(h_star)])
-                activations_divided_by_h_star = np.multiply(
-                    all_hidden_activations.T, 1 / h_star).T
-
-                outgoing_weights[index +
-                                 1].append(np.mean(np.dot(activations_divided_by_h_star, model.layers[index +
-                                                                                                      1].get_weights()[0][clustering_labels[index] == label]), axis=0).reshape((1, -
-                                                                                                                                                                                1)))
-            else:
-                weights[index].append(np.zeros(input_size) if index == 0 else np.zeros(
-                    int((preserve_percentage / 100) * HIDDEN_LAYERS[index - 1])))
-                biases[index].append(0.0)
-                outgoing_weights[index + \
-                    1].append(np.zeros((1, all_layer_sizes[index + 2])))
-                current_weights = shrunken_model.layers[index].get_weights()[0]
-                current_biases = shrunken_model.layers[index].get_weights()[1]
-                current_weights[:, label] = weights[index][label]
-                current_biases[label] = biases[index][label]
-                new_weights = shrunken_model.get_weights()
-                new_weights[2 * index] = current_weights
-                new_weights[2 * index + 1] = current_biases
-                shrunken_model.set_weights(new_weights)
-
+        # iterate through the cluster label space of the current hidden layer 
+        for label in range(0, int((preserve_percentage / 100) * HIDDEN_LAYERS[index])):
+            # average all the incoming weights from previous layer to nodes with the same cluster label in the current layer
+            weights[index].append(np.mean(np.vstack(outgoing_weights[index]).T[clustering_labels[index] == label], axis=0))
+            biases[index].append(np.mean(model.layers[index].get_weights()[1][clustering_labels[index] == label]))
+            # create intermediate state of outgoing weights 
+            # (i.e. state in which index + 1 layer has not been cluster but layer index has)
+            # by summing all the outgoing weights from the current layer from nodes with the same label
+            outgoing_weights[index + 1].append((np.sum(
+                model.layers[index + 1].get_weights()[0][clustering_labels[index] == label], axis=0)).reshape((1, -1)))
     biases.append([model.layers[len(HIDDEN_LAYERS)].get_weights()[1]])
     weights.append(outgoing_weights[-1])
     # -1 to skip the last one which is already in correct shape.
