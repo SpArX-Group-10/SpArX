@@ -1,0 +1,11 @@
+__pycache__
+.vscode/
+*.png
+results
+*original_model*
+*shrunken_model*
+/*env*/*
+.vscode/*
+/Lib/site-packages
+/Scripts
+pyvenv.cfg
