@@ -28,6 +28,9 @@ class FFNN:
         self.model = self._to_keras_model()
         self.functors = self._create_functors()
 
+        # activation values for each layer
+        self.forward_pass_data = None
+
 
     def _to_keras_model(self) -> tf.keras.Model:
         """ Converts the current model to an keras model. """
@@ -62,4 +65,6 @@ class FFNN:
                 The inputs to the network.
         """
 
-        return self.functors([inputs])
+        self.forward_pass_data = self.functors(inputs)
+
+        return self.forward_pass_data

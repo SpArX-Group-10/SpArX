@@ -293,17 +293,25 @@ def merge_nodes(X_onehot, y_onehot, activations, model, preserve_percentage, HID
     # in the outgoing weights layer sum up the weights of all the nodes in the cluster
     input_size = len(X_onehot.columns.values)
     output_size = len(y_onehot.columns.values)
+    # weights of the final clustered FFNN
     weights = []
-    outgoing_weights = [[model.layers[0].get_weights()[0]]]
+    # intermediate state of weights -- when hidden layer n has but clustered
+    # but layer n + 1 has not been clustered yet
+    outgoing_weights = [[model.layers[0].get_weights()[0]]]  
     biases = []
     for index, hidden_layer in enumerate(HIDDEN_LAYERS):
+        # create new dimension (i.e. index hidden layer)
         weights.append([])
         biases.append([])
         outgoing_weights.append([])
+        # iterate through the cluster label space of the current hidden layer 
         for label in range(0, int((preserve_percentage / 100) * HIDDEN_LAYERS[index])):
-            weights[index].append(
-                np.mean(np.vstack(outgoing_weights[index]).T[clustering_labels[index] == label], axis=0))
+            # average all the incoming weights from previous layer to nodes with the same cluster label in the current layer
+            weights[index].append(np.mean(np.vstack(outgoing_weights[index]).T[clustering_labels[index] == label], axis=0))
             biases[index].append(np.mean(model.layers[index].get_weights()[1][clustering_labels[index] == label]))
+            # create intermediate state of outgoing weights 
+            # (i.e. state in which index + 1 layer has not been cluster but layer index has)
+            # by summing all the outgoing weights from the current layer from nodes with the same label
             outgoing_weights[index + 1].append((np.sum(
                 model.layers[index + 1].get_weights()[0][clustering_labels[index] == label], axis=0)).reshape((1, -1)))
     biases.append([model.layers[len(HIDDEN_LAYERS)].get_weights()[1]])
