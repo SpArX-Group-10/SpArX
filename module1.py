@@ -2,14 +2,23 @@ from enum import Enum
 
 # Model Creation
 from tensorflow import keras
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.models import Sequential, Model
 from keras.layers import Dense, Embedding, Conv1D, GlobalMaxPool1D, Input, concatenate, Dropout, Activation
 from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
 import pandas as pd
 from pd import DataFrame
 from typing import Tuple
 
 import compas_load_and_preprocess
+
+# hidden layers
+HIDDEN_LAYERS = [50, 50]
+# Training parameters
+EPOCHS = 1000
+PATIENCE = 30
+BATCH_SIZE = 64
 
 ## Added code 
 class Framework(Enum):
@@ -24,31 +33,41 @@ class Framework(Enum):
 def train_model(dataset: str, activation_functions: list[str], hidden_layers_size: list[int]):
     X, y = import_dataset(dataset)
     model = get_FFNN_model_general(X, y, activation_functions, hidden_layers_size)
+    
+    # divide test and train (one-hot and original format)
+    # TODO: get user information for splitting data
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.2, random_state=2, shuffle=True)
+    net_train(model, X_train, y_train, X_test, y_test)
     return model
 
-# TODO: import dataset from file path to pandas dataframe
-def import_dataset(dataset: str) -> Tuple[DataFrame, DataFrame]:
-    return (None, None)
+# Import dataset from file path to pandas dataframe
+def import_dataset(filepath: str) -> Tuple[DataFrame, DataFrame]:
+    # Assuming the dataset is in the same directory as the module
+    # Assuming last row is the label and the rest are features
+    data = pd.read_csv(filepath)
+    X = data.iloc[:-1]
+    y = data.iloc[-1]
+    return (X, y)
+
 
 
 # Approach 2: Pretrained model
 # - What attributes do team2 need?
 
 # Import from keras
-def import_model(framework: Framework, filepath: str):
+def import_model(framework: Framework, filepath: str) -> keras.Model:
     match framework:
         case Framework.KERAS:
             return load_keras_model(filepath)
         case default:
-            # TODO: throw an error 
-            return None
+            raise ValueError("Unsupported framework: {}!", framework)
 
-def load_keras_model(filepath: str):
+def load_keras_model(filepath: str) -> keras.Model:
     model = keras.models.load_model(filepath) #TODO
-    return None
+    return model
 
     
-def get_preset_dataset(dataset: str):
+def load_preset_dataset(dataset: str) -> Tuple[DataFrame, DataFrame]:
     # Load and plot
     match dataset:
         case "breast cancer":
@@ -147,7 +166,6 @@ def get_FFNN_model_general(X: DataFrame, y: DataFrame, activation_funcs: list[st
         for (i, hidden_size) in enumerate(hidden_layers_size[1:]):
             ff_layers.insert(-1, Dense(hidden_size, activation=activation_funcs[i]))
 
-    print(ff_layers)
     model = Sequential(ff_layers)
     model.compile(optimizer='adam',
                   loss='binary_crossentropy',
@@ -158,34 +176,10 @@ def get_FFNN_model_general(X: DataFrame, y: DataFrame, activation_funcs: list[st
 
 
 # train FFNN
-def net_train(model, bestmodel_path, X_train, y_train_onehot, X_validate, y_validate_onehot, epochs=EPOCHS):
-    # Define four callbacks to use
-    checkpointer = ModelCheckpoint(filepath=bestmodel_path, verbose=1, save_best_only=True)
-    early_stopping = EarlyStopping(monitor='val_loss', patience=PATIENCE)
+def net_train(model, X_train, y_train_onehot, X_validate, y_validate_onehot, epochs=EPOCHS):
 
     # Train the model
     history = model.fit(X_train, y_train_onehot, verbose=2, epochs=epochs, batch_size=BATCH_SIZE,
-                        callbacks=[checkpointer, early_stopping], validation_data=(X_validate, y_validate_onehot))
+                        validation_data=(X_validate, y_validate_onehot))
 
     return history
-
-
-model = get_FFNN_model(X_train, y_train, HIDDEN_LAYERS)
-
-model_path = os.path.join(RESULT_PATH, 'cancer_global_net.h5')
-forge_gen = False
-
-if not os.path.exists(model_path) or forge_gen:
-    history = net_train(model, model_path, X_train, y_train, X_test, y_test)
-
-    score = model.evaluate(X_test, y_test)
-    plt.figure(figsize=(14, 6))
-    for key in history.history.keys():
-        plt.plot(history.history[key], label=key)
-    plt.legend(loc='best')
-    plt.grid(alpha=.2)
-    plt.title(f'batch_size = {BATCH_SIZE}, epochs = {EPOCHS}')
-    plt.draw()
-else:
-    print('Model loaded.')
-    model.load_weights(model_path)

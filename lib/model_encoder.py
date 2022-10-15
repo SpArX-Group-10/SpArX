@@ -84,3 +84,24 @@ class Model:
             activation_functions.append(Model.activation_to_str(layer.activation))
 
         return (num_layers, layer_shapes, weights, biases, activation_functions)
+
+
+
+# create_ffnn(shape, activations, )
+# create_ffnn([3, 50, 50, 50, 50, 3], activations, )
+# train_ffnn(epochs, lr, optimizers, model, train, test)
+
+
+"""
+keras.sequential([
+    dense(64, activaiton="relu"),
+    dense(64, activaiton="relu"),
+    dense(64, activaiton="relu"),
+    dense(64, activaiton="relu"),
+    dense(64, activaiton="relu"),
+    dense(64, activaiton="relu"),
+    dense(3, activaiton="sigmoid"),
+])
+
+keras.fit(xtrain, xtest)
+"""
