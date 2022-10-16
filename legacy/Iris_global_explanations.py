@@ -427,7 +427,10 @@ def merge_nodes_globally(
     weights = []
     # intermediate state of weights -- when hidden layer n has but clustered
     # but layer n + 1 has not been clustered yet
-    outgoing_weights = [[model.layers[0].get_weights()[0]]]  
+    outgoing_weights = [[model.layers[0].get_weights()[0]]]
+    # [     [[6, 7, 8] , [3, 4, 5], [1, 2, 3]] # weights of that layer
+    #       [4 , 5, 6] # weights of the bias
+    # ]
     biases = []
     epsilon = 1e-30
     all_layer_sizes = [input_size]
@@ -452,7 +455,7 @@ def merge_nodes_globally(
                 model.layers[index + 1].get_weights()[0][clustering_labels[index] == label], axis=0)).reshape((1, -1)))
     biases.append([model.layers[len(HIDDEN_LAYERS)].get_weights()[1]])
     weights.append(outgoing_weights[-1])
-    # -1 to skip the last one which is already in correct shape.
+    # -1 to skip the last one which is alread3y in correct shape.
     for index in range(len(weights)):
         if index == len(weights) - 1:
             weights[index] = np.vstack(weights[index])
