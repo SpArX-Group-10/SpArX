@@ -31,7 +31,7 @@ class GlobalMerger(Merger):
         merged_weights = []
         merged_biases = []
 
-        partial_weights = [[mlp.model.layers[0].get_weights()[0]]]  
+        partial_weights = [[mlp.model.layers[0].get_weights()[0]]]
 
         for index in range(len(mlp.shape[1:-1])):
 
@@ -59,7 +59,7 @@ class GlobalMerger(Merger):
 
         new_layer_weights = []
         for label in range(num_clusters):
-            #TODO: test if we can use label instead of cluster_labels[index] == label
+            # TODO: test if we can use label instead of cluster_labels[index] == label
             new_layer_weights.append(np.mean(np.vstack(partial_weights).T[cluster_labels[index] == label], axis=0))
 
         return new_layer_weights
