@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 
 # Model Creation
 from tensorflow import keras
@@ -8,7 +8,7 @@ from keras.layers import Dense, Embedding, Conv1D, GlobalMaxPool1D, Input, conca
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 import pandas as pd
-from pd import DataFrame
+from pandas import DataFrame
 from typing import Tuple
 
 import compas_load_and_preprocess
@@ -43,13 +43,12 @@ def train_model(dataset: str, activation_functions: list[str], hidden_layers_siz
 # Import dataset from file path to pandas dataframe
 def import_dataset(filepath: str) -> Tuple[DataFrame, DataFrame]:
     # Assuming the dataset is in the same directory as the module
-    # Assuming last row is the label and the rest are features
-    data = pd.read_csv(filepath)
-    X = data.iloc[:-1]
-    y = data.iloc[-1]
-    return (X, y)
-
-
+    # Assuming last column is the label and the rest are features
+    # Assuming first row is the header
+    raw_data = pd.read_csv(filepath)
+    data_entries = raw_data.iloc[:, 1:-1] # all rows, all columns except the last
+    labels = raw_data.iloc[:, -1] # all rows, last column 
+    return (data_entries, labels)
 
 # Approach 2: Pretrained model
 # - What attributes do team2 need?
@@ -66,7 +65,7 @@ def load_keras_model(filepath: str) -> keras.Model:
     model = keras.models.load_model(filepath) #TODO
     return model
 
-    
+
 def load_preset_dataset(dataset: str) -> Tuple[DataFrame, DataFrame]:
     # Load and plot
     match dataset:
