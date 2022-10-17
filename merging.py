@@ -33,9 +33,12 @@ class GlobalMerger(Merger):
 
         partial_weights = [[mlp.model.layers[0].get_weights()[0]]]
 
+        new_shape = []
+
         for index in range(len(mlp.shape[1:-1])):
 
-            nclusters = max(cluster_labels[index])
+            nclusters = max(cluster_labels[index]) + 1
+            new_shape.append(nclusters)
 
             # compute the new weights of the clustered layer
             merged_weights.append(cls._merge_weights(index, nclusters, cluster_labels, partial_weights[index]))
@@ -47,8 +50,9 @@ class GlobalMerger(Merger):
 
         merged_weights.append(partial_weights[-1])
         merged_biases.append([mlp.layers[len(mlp.shape[1:-1])].get_weights()[1]])
-
-        return merged_weights, merged_biases
+        new_shape = mlp.shape[0] + new_shape + mlp.shape[-1]
+        
+        return FFNN(new_shape, merged_weights, merged_biases, mlp.activation_functions)
 
 
     @classmethod
