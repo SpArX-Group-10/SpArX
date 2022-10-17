@@ -51,7 +51,7 @@ class GlobalMerger(Merger):
         merged_weights.append(partial_weights[-1])
         merged_biases.append([mlp.layers[len(mlp.shape[1:-1])].get_weights()[1]])
         new_shape = mlp.shape[0] + new_shape + mlp.shape[-1]
-        
+
         return FFNN(new_shape, merged_weights, merged_biases, mlp.activation_functions)
 
 
