@@ -1,4 +1,5 @@
 from enum import Enum, auto
+import re
 
 # Model Creation
 from tensorflow import keras
@@ -23,8 +24,30 @@ BATCH_SIZE = 64
 ## Added code 
 class Framework(Enum):
     KERAS = auto()
-   
-# Approach 1: we train it using
+    
+# Approach 1: User inputs a pre-trained model
+def import_model(framework: Framework, model: any) -> keras.Model:
+    match framework:
+        case Framework.KERAS:
+            if not model.isinstance(keras.Model):
+                raise ValueError("Model is not a Keras model.")
+            if not verify_keras_model_is_fnn(model): 
+                raise ValueError("Model is not a feed-forward neural network.")
+            return model
+        case default:
+            raise ValueError("Unsupported framework: {}!", framework)
+
+def verify_keras_model_is_fnn(model: keras.Model) -> bool:
+    # TODO: verify that the model is a feed-forward neural network
+    # TODO: should we raise errors here too? (so user knows why it's not a FNN)
+    # Verify all layers are dense layers
+    for layer in model.layers:
+        if not layer.isinstance(keras.layers.Dense):
+            return False
+    # Verify that the model is a sequential model
+    return model.isinstance(keras.Sequential)
+    
+# Approach 2: we train it using
 # - Dataset
 # - number of layers for MLP
 # - number of hidden neurons for each hidden layer
@@ -49,21 +72,6 @@ def import_dataset(filepath: str) -> Tuple[DataFrame, DataFrame]:
     data_entries = raw_data.iloc[:, 1:-1] # all rows, all columns except the last
     labels = raw_data.iloc[:, -1] # all rows, last column 
     return (data_entries, labels)
-
-# Approach 2: Pretrained model
-# - What attributes do team2 need?
-
-# Import from keras
-def import_model(framework: Framework, filepath: str) -> keras.Model:
-    match framework:
-        case Framework.KERAS:
-            return load_keras_model(filepath)
-        case default:
-            raise ValueError("Unsupported framework: {}!", framework)
-
-def load_keras_model(filepath: str) -> keras.Model:
-    model = keras.models.load_model(filepath) #TODO
-    return model
 
 
 def load_preset_dataset(dataset: str) -> Tuple[DataFrame, DataFrame]:
