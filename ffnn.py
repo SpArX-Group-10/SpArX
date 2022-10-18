@@ -35,15 +35,20 @@ class FFNN:
     def _to_keras_model(self) -> tf.keras.Model:
         """ Converts the current model to an keras model. """
 
-        inputs = tf.keras.Input(shape=(self.shape[0],))
+        inputs = tf.keras.layers.InputLayer(input_shape=(self.shape[0],))
         layers = []
+        # create the model shape and layers
         for i in range(1, len(self.shape)):
-            layer = tf.keras.layers.Dense(
-                self.shape[i], activation=self.activation_functions[i-1])
-            layer.set_weights(weights=self.weights[i] + self.bias[i])
+            layer = tf.keras.layers.Dense(self.shape[i], activation=self.activation_functions[i-1])
             layers.append(layer)
 
         model = tf.keras.Sequential([inputs] + layers)
+        model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+        # set weights and biases for the model
+        for i, (weight, bias) in enumerate(zip(self.weights, self.bias)):
+            model.layers[i].set_weights([weight, bias])
+
         return model
 
 

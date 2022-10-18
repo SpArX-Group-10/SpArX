@@ -7,9 +7,9 @@ from ffnn import FFNN
 class Merger:
     """Abstract class for merging algorithms."""
 
-    @abstractmethod
     @staticmethod
-    def merge(cluster_labels: np.ndarray, mlp: FFNN) -> FFNN:
+    @abstractmethod
+    def merge(mlp: FFNN, cluster_labels: np.ndarray) -> FFNN:
         """Merges the given model.
 
         :param
@@ -24,14 +24,13 @@ class Merger:
 class GlobalMerger(Merger):
     """Merges the given model using the global merge technique."""
 
-
-    @classmethod
     @staticmethod
-    def merge(cls, cluster_labels: np.ndarray, mlp: FFNN) -> FFNN:
+    def merge(mlp: FFNN, cluster_labels: np.ndarray) -> FFNN:
         merged_weights = []
         merged_biases = []
 
-        partial_weights = [[mlp.model.layers[0].get_weights()[0]]]
+        partial_weights = [mlp.model.layers[0].get_weights()[0]]
+        print(np.asarray(partial_weights).shape)
 
         new_shape = []
 
@@ -41,64 +40,82 @@ class GlobalMerger(Merger):
             new_shape.append(nclusters)
 
             # compute the new weights of the clustered layer
-            merged_weights.append(cls._merge_weights(index, nclusters, cluster_labels, partial_weights[index]))
+            merged_weights.append(GlobalMerger._merge_weights(index, nclusters, cluster_labels, partial_weights[index]))
             # compute the new biases of the clustered layer
-            merged_biases.append(cls._merge_biases(index, mlp, nclusters, cluster_labels))
+            merged_biases.append(GlobalMerger._merge_biases(index, mlp, nclusters, cluster_labels))
             # update the intermediate weights (from merged layer to unmerged layer)
-            partial_weights.append(cls._update_partial_weights(index, mlp, nclusters, cluster_labels))
-
+            partial_weights.append(GlobalMerger._update_partial_weights(index, mlp, nclusters, cluster_labels))
 
         merged_weights.append(partial_weights[-1])
-        merged_biases.append([mlp.layers[len(mlp.shape[1:-1])].get_weights()[1]])
-        new_shape = mlp.shape[0] + new_shape + mlp.shape[-1]
+        merged_biases.append(mlp.model.layers[len(mlp.shape[1:-1])].get_weights()[1])
+
+
+        new_shape = [mlp.shape[0]] + new_shape + [mlp.shape[-1]]
 
         return FFNN(new_shape, merged_weights, merged_biases, mlp.activation_functions)
 
 
-    @classmethod
+    @staticmethod
     def _merge_weights(
-        cls, index: int, num_clusters: int, cluster_labels: np.ndarray, partial_weights: list[np.ndarray]
+        index: int, num_clusters: int, cluster_labels: np.ndarray, partial_weights: np.ndarray
     ) -> list[np.ndarray]:
         """Merges the incoming weights of the given layer, according to the given cluster labels."""
+        # print(f" partial weights before : {partial_weights.shape}")
 
         new_layer_weights = []
         for label in range(num_clusters):
             # TODO: test if we can use label instead of cluster_labels[index] == label
-            new_layer_weights.append(np.mean(np.vstack(partial_weights).T[cluster_labels[index] == label], axis=0))
+            new_layer_weights.append(np.mean(partial_weights.T[cluster_labels[index] == label], axis=0))
 
-        return new_layer_weights
+        # print(f" new weights after : {np.asarray(new_layer_weights).T.shape}")
+        return np.asarray(new_layer_weights).T
 
 
-    @classmethod
+# 4 -> 2
+# [[a, b, c, d],  (2, 4)
+#  [e, f, g, h]]
+
+    @staticmethod
     def _merge_biases(
-        cls, index: int, mlp : FFNN, num_clusters:int, cluster_labels: np.ndarray
+        index: int, mlp : FFNN, num_clusters:int, cluster_labels: np.ndarray
     ) -> list[np.ndarray]:
         """Merges the incoming bias weights of the given layer, according to the given cluster labels."""
 
-        initial_biases = mlp.layers[index].get_weights[1]
+        initial_biases = mlp.model.layers[index].get_weights()[1]
         new_layer_biases = []
         for label in range(num_clusters):
-            new_layer_biases.append(np.mean(initial_biases[cluster_labels == label]))
+            new_layer_biases.append(np.mean(initial_biases[cluster_labels[index] == label]))
 
-        return new_layer_biases
+        return np.asarray(new_layer_biases)
 
-    @classmethod
+
+    @staticmethod
     def _update_partial_weights(
-        cls, index: int, mlp : FFNN, num_clusters:int, cluster_labels: np.ndarray
-    ) -> list[np.ndarray]:
+        index: int, mlp: FFNN, num_clusters:int, cluster_labels: np.ndarray
+    ) -> np.ndarray:
         """Updates the intermediate weights (from merged layer to unmerged layer)."""
+        print(f"old weight : {mlp.model.layers[index + 1].get_weights()[0].shape}")
 
         new_partial_weights = []
-        for label in range(num_clusters):
-            new_partial_weights.append(np.sum(
-                mlp.model.layers[index + 1].get_weights()[0][cluster_labels[index] == label], axis=0)).reshape((1, -1))
 
-        return new_partial_weights
+# outgoing_weights[index + 1].append(
+    # (np.sum(
+    #       model.layers[index + 1].get_weights()[0][clustering_labels[index] == label], axis=0))
+    # .reshape((1, -1))
+    # )
+
+        for label in range(num_clusters):
+            new_partial_weights.append(
+                np.sum(mlp.model.layers[index + 1].get_weights()[0][cluster_labels[index] == label], axis=0))
+
+        print(f"new partial weight : {np.asarray(new_partial_weights).shape}")
+
+        return np.asarray(new_partial_weights)
 
 
 class LocalMerger(Merger):
     """Merges the given model using the local merge technique."""
 
     @staticmethod
-    def merge(cluster_labels: np.ndarray, mlp: FFNN) -> FFNN:
+    def merge(mlp: FFNN, cluster_labels: np.ndarray) -> FFNN:
         raise NotImplementedError
