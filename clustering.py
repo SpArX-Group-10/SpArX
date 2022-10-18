@@ -1,6 +1,8 @@
 from abc import abstractmethod
 import numpy as np
-import sklearn
+from sklearn.cluster import KMeans, AgglomerativeClustering
+
+
 from ffnn import FFNN
 
 
@@ -22,7 +24,7 @@ class Clusterer:
 
 
     @classmethod
-    def cluster(cls, num_clusters: int, mlp: FFNN) -> np.ndarray:
+    def cluster(cls, mlp: FFNN, num_clusters: int) -> np.ndarray:
         """Clusters the given model.
 
         :param
@@ -45,7 +47,7 @@ class KMeansClusterer(Clusterer):
 
     @staticmethod
     def cluster_layer(num_clusters: int, data: np.ndarray) -> np.ndarray:
-        return sklearn.cluster.KMeans(n_clusters=num_clusters).fit(data).labels_
+        return KMeans(n_clusters=num_clusters).fit(data).labels_
 
 
 class AgglomerativeClusterer(Clusterer):
@@ -53,4 +55,4 @@ class AgglomerativeClusterer(Clusterer):
 
     @staticmethod
     def cluster_layer(num_clusters: int, data: np.ndarray) -> np.ndarray:
-        return sklearn.cluster.AgglomerativeClustering(n_clusters=num_clusters).fit(data).labels_
+        return AgglomerativeClustering(n_clusters=num_clusters).fit(data).labels_
