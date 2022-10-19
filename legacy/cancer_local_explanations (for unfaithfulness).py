@@ -10,6 +10,7 @@ The new model clusters the hidden nodes in the original network based on their a
 1) This means that using all the inputs, we first compute the activations of the hidden nodes.
 2) Then, using all these activations, we cluster the nodes that topically have the same (or close)
  activations.
+ * Hidden nodes with zero activations are clustered to one cluster
 3) For each input, we recompute the weights of the clustered network
  so that we have the local explanations for each input.
  Notice that this way the output of the original model and the shrunken model are exactly the same.
@@ -29,11 +30,8 @@ To change the architecture of the model you should both edit the HIDDEN_LAYERS p
 (for example HIDDEN_LAYERS =[10,20] means the model has two hidden layers the with dimensions 10 and 20 sequentially.)
 You can also change the get_FFNN_model function to change the activation functions, the optimizer and loss function.
 
-How to change the problem setting?
-replace the load_compas() function to load your dataset with the same format.
 
  """
-
 
 # Importing all the libraries and utilities
 import pandas as pd
@@ -52,11 +50,10 @@ from keras.utils import plot_model
 import os
 from sklearn.cluster import KMeans, AgglomerativeClustering
 
-import utility_functions
-import iris_load_dataset
-
-import matplotlib.pyplot as plt
+import legacy.utility_functions as utility_functions
+import compas_load_and_preprocess
 import sklearn
+from sklearn.datasets import load_breast_cancer
 
 # creating the results directory for saving the deep models and the visualization of the model structure.
 RESULT_PATH = './results'
@@ -64,67 +61,46 @@ if not os.path.exists(RESULT_PATH):
     os.mkdir(RESULT_PATH)
 
 
+
+
 # dataset and model parameters
-# class_names = ['No', 'Yes'] #in case of compas dataset, the output could be 'No' and 'Yes'
+class_names = ['malignant', 'benign'] #in case of compas dataset, the output could be 'No' and 'Yes'
 # hidden layers
 HIDDEN_LAYERS = [50, 50]
-
+# Training parameters
+EPOCHS = 1000
+PATIENCE = 30
+BATCH_SIZE = 64
 # How much should the network be shrunken
 Shrinkage_percentage = 50  # Integers in range (0-100). how much do you want the network be shrinked? (in percentatge)
 # How much of the edges with low weights should be pruned in visualization
 # (notice that they are not really pruned in the computation process)?
-pruning_ratio = 0.5  # the number should be in range [0, 1].
+pruning_ratio = 0.8  # the number should be in range [0, 1].
 # Example: pruning_ratio = 0.8 means that only the edges higher than 0.8 quantile of all the weights would be shown.
 
 # Load and plot
-# data = compas_load_and_preprocess.load_compas()
-data = iris_load_dataset.load_iris()
-
-# ploly_df(data)
-# CLASS = 'two_year_recid'
-CLASS = "class"
-# Split X and y
-X = data.drop(columns=[CLASS])
-y = data[CLASS]
-
-# Randomize
-X = X.sample(frac=1, random_state=2020)
-y = y.loc[X.index.values]
-X.reset_index(inplace=True, drop=True)
-y.reset_index(inplace=True, drop=True)
-
-# One-hot
-# Make data as one-hot, also make X as one-hot #for iris there is no need to change the dataset to one-hot
-# data_onehot = pd.get_dummies(data)
-# X_onehot = pd.get_dummies(X)
-
-# y_onehot = pd.get_dummies(y)[['Yes']]
-y_onehot = pd.get_dummies(y)
+data = load_breast_cancer()
+X = pd.DataFrame(data.data)
+y = pd.DataFrame(data.target)
 
 # divide test and train (one-hot and original format)
-# for compas
-# X_train, X_test, y_train, y_test, data_train, data_test, X_onehot_train, X_onehot_test, y_onehot_train, y_onehot_test, data_onehot_train, data_onehot_test = \
-#     train_test_split(X, y, data, X_onehot, y_onehot, data_onehot, test_size=.25, random_state=2020, shuffle=True)
-# for iris
-X_train, X_test, y_train, y_test, data_train, data_test, y_onehot_train, y_onehot_test = \
-    train_test_split(X, y, data, y_onehot, test_size=.2, random_state=2, shuffle=True)
+X_train, X_test, y_train, y_test = \
+    train_test_split(X, y, test_size=.2, random_state=2, shuffle=True)
 
 print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
 
 # constructing the original model
-model = utility_functions.get_FFNN_model_non_binary(X, y_onehot, HIDDEN_LAYERS)
+model = utility_functions.get_FFNN_model(X_train, y_train, HIDDEN_LAYERS)
 
 # model's name saved in the results folder
-model_path = os.path.join(RESULT_PATH, 'net_iris_local.h5')#'net_iris_local.h5')
+model_path = os.path.join(RESULT_PATH, 'cancer_local_net.h5')
 forge_gen = False
 # load model weights if previously trained and saved. If not, train the model.
 if not os.path.exists(model_path) or forge_gen:
-#     history = utility_functions.net_train(model, model_path, X_onehot_train, y_onehot_train, X_onehot_test,
-#                                           y_onehot_test)
-    history = utility_functions.net_train(model, model_path, X_train, y_onehot_train, X_test, y_onehot_test)
+    history = utility_functions.net_train(model, model_path, X_train, y_train, X_test,
+                                          y_test, epochs=EPOCHS, patience=PATIENCE, batch_size=BATCH_SIZE)
 
-#     score = model.evaluate(X_onehot_test, y_onehot_test)
-    score = model.evaluate(X_test, y_onehot_test)
+    score = model.evaluate(X_test, y_test)
     plt.figure(figsize=(14, 6))
     for key in history.history.keys():
         plt.plot(history.history[key], label=key)
@@ -137,17 +113,13 @@ else:
     model.load_weights(model_path)
 
 # predicting the label of test data.
-# for compas
-# y_pred = model.predict(X_onehot_test).flatten() > 0.5
-# y_ground_truth = y_test.values == 'Yes'
-# for iris
-predictions = np.argmax(model.predict(X_test), axis=1)
-y_pred = np.eye(np.max(predictions) + 1)[predictions]
-# print(classification_report(y_ground_truth, y_pred, digits=4))
-print(classification_report(y_onehot_test, y_pred, digits=4))
+y_pred = model.predict(X_test).flatten() > 0.5
+y_ground_truth = y_test.values == 1
+print(classification_report(y_ground_truth, y_pred, digits=4))
 
 os.environ["PATH"] += os.pathsep + 'C:/Program Files/Graphviz/bin/'
 plot_model(model, to_file=RESULT_PATH + '/model.png', show_shapes=True, show_layer_names=False)
+
 
 # clusting each hidden layer based on its activation (global clustering)
 def clustering_nodes(preserve_percentage, NUMBER_OF_NODES_IN_HIDDEN_LAYER, activations, clustering_algorithm="kmeans"):
@@ -171,13 +143,15 @@ def clustering_nodes(preserve_percentage, NUMBER_OF_NODES_IN_HIDDEN_LAYER, activ
         # we have all the zero activations for a specific example in cluster (0).
         # Therefore, we have -1 here and we add a cluster of zeros after calling
         # the clustering_the_zero_activations_out_to_a_new_cluster_for_an_example function
-        n_clusters_ = int((preserve_percentage / 100) * hidden_layer)
+        n_clusters_ = int((preserve_percentage / 100) * hidden_layer) - 1
         if clustering_algorithm == "kmeans":
             clustering = KMeans(n_clusters=n_clusters_, random_state=1).fit(clustering_input)
         elif clustering_algorithm == "AgglomerativeClustering":
             clustering = AgglomerativeClustering(n_clusters=n_clusters_).fit(clustering_input)
         clustering_labels.append(clustering.labels_)
     return clustering_labels
+
+
 
 # clusting each hidden layer based on its activation (global clustering)
 def clustering_nodes_weighted(preserve_percentage, NUMBER_OF_NODES_IN_HIDDEN_LAYER, activations,
@@ -202,7 +176,7 @@ def clustering_nodes_weighted(preserve_percentage, NUMBER_OF_NODES_IN_HIDDEN_LAY
         # we have all the zero activations for a specific example in cluster (0).
         # Therefore, we have -1 here and we add a cluster of zeros after calling
         # the clustering_the_zero_activations_out_to_a_new_cluster_for_an_example function
-        n_clusters_ = int((preserve_percentage / 100) * hidden_layer)
+        n_clusters_ = int((preserve_percentage / 100) * hidden_layer) - 1
         if clustering_algorithm == "kmeans":
             clustering = KMeans(n_clusters=n_clusters_, random_state=1).fit(clustering_input)
         elif clustering_algorithm == "AgglomerativeClustering":
@@ -225,6 +199,7 @@ def clustering_the_zero_activations_out_to_a_new_cluster_for_an_example(activati
                 # label_index += 1
         clustering_labels_after_adding_zero_cluster.append(np.array(labels_after_adding_cluster_of_zeros))
     return clustering_labels_after_adding_zero_cluster
+
 
 # merge the nodes at each cluster and recompute the incoming and outgoing weights of edges
 def merge_nodes(X_onehot, y_onehot, activations, model, shrunken_model, preserve_percentage, HIDDEN_LAYERS,
@@ -319,8 +294,7 @@ def merge_nodes_global(X_onehot, y_onehot, activations, model, shrunken_model, p
     for hidden_layer in HIDDEN_LAYERS:
         all_layer_sizes.append(hidden_layer)
     all_layer_sizes.append(output_size)
-
-    new_example_weights = example_weights / np.sum(example_weights)
+    example_weights /= np.sum(example_weights)
     for index, hidden_layer in enumerate(HIDDEN_LAYERS):
         weights.append([])
         biases.append([])
@@ -346,7 +320,7 @@ def merge_nodes_global(X_onehot, y_onehot, activations, model, shrunken_model, p
                 one_weights = np.ones_like(h_star) / len(h_star)
                 h_star = np.array([1 if h_s == 0 else h_s for h_s in list(h_star)])
                 #
-                activations_divided_by_h_star = np.sum(np.multiply(all_hidden_activations.T, new_example_weights / h_star).T, axis = 0)
+                activations_divided_by_h_star = np.sum(np.multiply(all_hidden_activations.T, example_weights / h_star).T, axis = 0)
 
                 outgoing_weights[index + 1].append(np.dot(activations_divided_by_h_star,
                                                           model.layers[index + 1].get_weights()[0][
@@ -377,276 +351,195 @@ def merge_nodes_global(X_onehot, y_onehot, activations, model, shrunken_model, p
 
     return weights, biases, input_size, output_size
 
-
+# distances to weights (lower distances to the target input has higher weights)
 def kernel(d, kernel_width):
-    return np.sqrt(np.exp(-(d ** 2) / kernel_width ** 2))
+    return np.sqrt(np.exp(-(d ** 2) / kernel_width**2))
 
-kernel_width = np.sqrt(X_test.shape[1]) * .1
+kernel_width = np.sqrt(X_test.shape[1]) * .75
 from functools import partial
 kernel_fn = partial(kernel, kernel_width=kernel_width)
+# usage: kernel_fn(distances) where distances are the distance of inputs to the target input
+
 
 # Truncated model to see activations
-activations = utility_functions.compute_activations_for_each_layer(model, X_test.values)
+
+
+
+
+#LIME explainer
+from lime import lime_tabular
+explainer = lime_tabular.LimeTabularExplainer(X_train.values, mode="regression",
+                                                  random_state = 123)
+LIME_local_unfaithfulness_list = []
 overal_unfaithfulness_list = []
-Shrinkage_percentage_list = []
-overal_structural_unfaithfulness_list = []
-overal_LIME_local_unfaithfulness_list = []
-for Shrinkage_percentage in range(20, 90, 20):
-    Shrinkage_percentage_list.append(Shrinkage_percentage/100)
+for Shrinkage_percentage in np.arange(20, 90, 20):
     # Shrink the network using the Kmeans clustering below. #Here we shrink the hidden nodes from 100 nodes to 3 nodes
     preserve_percentage = 100 - Shrinkage_percentage
 
+    # clustering_labels = clustering_nodes(preserve_percentage, HIDDEN_LAYERS, activations,
+    #                                               clustering_algorithm="kmeans")
+    # print(clustering_labels)
 
-    class_names = ['Iris-setosa', 'Iris-versicolor', 'Iris-versicolor']
-    feature_names = X_test.columns.values
-
-    from lime import lime_tabular
-    explainer = lime_tabular.LimeTabularExplainer(X_train.values, mode="classification",
-                                                      class_names = class_names,
-                                                      feature_names = feature_names,
-                                                      random_state = 123)
-    # global clustering
-    measures_for_visualization = []
-    number_of_tests = 1
-    feature_attribution_list = []
-    # sigmas = [10,5,2,1.5,1,0.8,0.6,0.4,0.2,0.1]
-    sigmas = [2]
-    all_misclassifications = []
-    weighted_merging = True # this means that instead of sum for the output we use weighted sum weighted based on activation values
+    sigma = 2
+    weighted_merging = True
+    overal_LIME_local_unfaithfulness = 0
+    overal_unfaithfulness=0
+    number_of_test_examples = 5
+    for example_index in range(0, number_of_test_examples):  # len(X_test)):
 
 
-    for j in range(0, number_of_tests):
-        sigma = sigmas[j]
-        feature_attribution_distance = 0
-        overal_unfaithfulness = 0
-        overal_LIME_local_unfaithfulness = 0
-        overal_structural_unfaithfulness = 0
-        measures_for_visualization.append(np.zeros(3))
-        measures_for_visualization[j][0] = sigma
-        number_of_examples = 5
-        misclassification = 0
-        # var = np.mean(np.var(X_test.values[0:number_of_examples], axis=0))
-        for example_index in range(0, number_of_examples):  # len(X_onehot_test)):
+        truncated_model_dimensions = [int((preserve_percentage / 100) * hidden_layer) for hidden_layer in HIDDEN_LAYERS]
 
-            truncated_model_dimensions = [int((preserve_percentage / 100) * hidden_layer) for hidden_layer in HIDDEN_LAYERS]
+        # cunstruct the structure of the truncated model using the same function for building a FFNN model.
+        shrinked_model = utility_functions.get_FFNN_model(X_train, y_train, truncated_model_dimensions)
 
-            # cunstruct the structure of the truncated model using the same function for building a FFNN model.
-            shrinked_model = utility_functions.get_FFNN_model_non_binary(X_test, y_onehot_test, truncated_model_dimensions)
+        # Generate samples around an example using lime_tablurar __data_inverse function
+        # todo: change __data_inverse to data_inverse to be able to use the function outside lime_tablurar function
+        data, inverse = explainer.data_inverse(X_test.values[example_index], 5000)
+        scaled_data = (data - explainer.scaler.mean_) / explainer.scaler.scale_
+        data_labels = model.predict(inverse)
 
+        # find wight of each example with respect to a target example
+        distance_examples_to_target = sklearn.metrics.pairwise_distances(
+            scaled_data,
+            scaled_data[0].reshape(1, -1),
+            metric='euclidean'
+        ).ravel()
+        example_weights = kernel_fn(distance_examples_to_target)
+        # example_weights /= np.sum(example_weights)
+        labels_column = data_labels[:, 0]
+        used_features = explainer.base.feature_selection(scaled_data,
+                                               labels_column,
+                                               example_weights,
+                                               X_train.shape[1],
+                                               'auto')
+        scaled_data = scaled_data[:, used_features]
 
-            # find wight of each example with respect to a target example
-            distance_examples_to_target = sklearn.metrics.pairwise_distances(
-                X_test.values,
-                X_test.values[example_index].reshape(1, -1),
-                metric='euclidean'
-            ).ravel()
-            example_weights = kernel_fn(distance_examples_to_target)
+        activations = utility_functions.compute_activations_for_each_layer(model, scaled_data)
 
-            activations = utility_functions.compute_activations_for_each_layer(model, X_test.values)
+        clustering_labels_with_no_zero = clustering_nodes_weighted(preserve_percentage, HIDDEN_LAYERS, activations,
+                                             clustering_algorithm="kmeans", sample_weights=example_weights)
+        print(clustering_labels_with_no_zero)
 
-            clustering_labels = clustering_nodes_weighted(preserve_percentage, HIDDEN_LAYERS, activations,
-                                                                       clustering_algorithm="kmeans",
-                                                                       sample_weights=example_weights)
-
-
-            if weighted_merging:
-                weights, biases, input_size, output_size = merge_nodes_global(
-                    X_test.values,
-                    y_onehot_test.values,
-                    activations,
-                    model,
-                    shrinked_model,
-                    preserve_percentage,
-                    HIDDEN_LAYERS,
-                    clustering_labels,
-                    example_index,
-                    example_weights)
-            else:
-                weights, biases, input_size, output_size = merge_nodes(
-                    X_test.values,
-                    y_onehot_test.values,
-                    activations,
-                    model,
-                    shrinked_model,
-                    preserve_percentage,
-                    HIDDEN_LAYERS,
-                    clustering_labels,
-                    example_index)
-
-            truncated_weights = []
-            for index, weight in enumerate(weights):
-                truncated_weights.append(weight)
-                truncated_weights.append(biases[index])
-
-            # setting weights of the truncated model
-            shrinked_model.set_weights(truncated_weights)
-
-            y_pred_test_shrinked = shrinked_model.predict(
-                np.array(X_test.values[example_index]).reshape((1, -1))).flatten()
-            y_pred_test = model.predict(np.array(X_test.values[example_index]).reshape((1, -1))).flatten()
-
-            print(f"Both Shrunken model and the Original model produce exactly the same output for test "
-                  f"example at index {example_index}" if np.abs(y_pred_test_shrinked[0] - y_pred_test[0]) < 1e-6 else
-                  f"Shurnken model's output {y_pred_test[0]} is "
-                  f"different from Original model's output {y_pred_test_shrinked[0]}")
-            print(f"ground_truth:{y_pred_test}, prediction:{y_pred_test_shrinked}")
-            if np.argmax(y_pred_test) != np.argmax(y_pred_test_shrinked):
-                misclassification +=1
-
-            # make a vector from all weights of the shrunken network. This will be used to remove the
-            all_weights = []
-            for weight in weights:
-                all_weights.extend(list(weight.reshape((-1,))))
-
-            # visualize the shrunken model as QBAF.
-            # for test_index in range(0, 20):  # range(len(np.array(X_onehot_test))):
-            test_index = example_index
-
-            input = X_test.values[example_index]
-            output = y_onehot_test.values[example_index]
-            feature_names = X_test.columns.values
-            number_of_hidden_nodes = [int((preserve_percentage / 100) * hidden_layer) for hidden_layer in HIDDEN_LAYERS]
-
-            quantile = np.quantile(np.abs(np.array(all_weights)).reshape(1, -1), pruning_ratio)
-            weight_threshold = quantile
-
-            from plot_QBAF import visualize_attack_and_supports_QBAF, general_method_for_visualize_attack_and_supports_QBAF
-
-            general_method_for_visualize_attack_and_supports_QBAF(input, output, shrinked_model, feature_names,
-                                                                  number_of_hidden_nodes,
-                                                                  weight_threshold, weights, biases, Shrinkage_percentage,
-                                                                  'iris_local_graphs(shrunken_model)', 0)
-
-            # make a vector from all weights of the original network.
-            all_weights_original = []
-            original_weights = []
-            for layer in model.layers:
-                all_weights_original.extend(list(layer.get_weights()[0].reshape((-1,))))
-                original_weights.append(layer.get_weights()[0])
-
-            # visualize the original model
-            # for test_index in range(0, 20):  # range(len(np.array(X_onehot_test))):
-            input = X_test.values[example_index]
-            output = y_onehot_test.values[example_index]
-            feature_names = X_test.columns.values
-
-            quantile = np.quantile(np.abs(np.array(all_weights_original)).reshape(1, -1), pruning_ratio)
-            weight_threshold = quantile
-
-            from plot_QBAF import visualize_attack_and_supports_QBAF, general_clustered_visualize_attack_and_supports_QBAF
-
-            general_clustered_visualize_attack_and_supports_QBAF(input, output, model, feature_names, HIDDEN_LAYERS,
-                                                                 weight_threshold, original_weights, biases,
-                                                                 Shrinkage_percentage,
-                                                                 'iris_local_graphs(original_model)', 0, clustering_labels)
-
-            #LIME explanations for the original model
-            per_example_feature_attribution_distance = 0
-
-            #how to compute fidelity. Currently the explain_instance use the label=1 which means that it only considers output node number 1 and not all
-            # to change that you should consider using label=[0,1,2] (all the outputs of iris dataste) and compute the predictions of the regression model used
-            # in LIME that is Ridge model from sklearn using all the outputs from all the nodes you can compare the predictions of the original model and the
-            # regressor.
-            # then change the last lines in explain_instance function as follows:
-            # unfaithfulness = np.sum(list(ret_exp.score.values()))
-            # if self.mode == "regression":
-            #     ret_exp.intercept[1] = ret_exp.intercept[0]
-            #     ret_exp.local_exp[1] = [x for x in ret_exp.local_exp[0]]
-            #     ret_exp.local_exp[0] = [(i, -1 * j) for i, j in ret_exp.local_exp[1]]
-            # return ret_exp, unfaithfulness
-            # also add a new way for computing scores in lime_base.py as follows:
-            # new_score = np.sum(
-            #     np.multiply(np.power(easy_model.predict(neighborhood_data[:, used_features]) - labels_column, 2),
-            #                 weights / np.sum(weights)))
-            # and return new_score in addition to prediction_score
+        clustering_labels = clustering_the_zero_activations_out_to_a_new_cluster_for_an_example(
+            activations, HIDDEN_LAYERS,
+            0, clustering_labels_with_no_zero)
 
 
 
 
-            explanation, LIME_local_unfaithfulness = explainer.explain_instance(X_test.values[example_index], model.predict,
-                                                     num_features=len(feature_names),
-                                                     random_state=123, labels=[0,1,2])
-                                                    #,alpha=preserve_percentage/100)
-            print(f"LIME local unfaithfulness: {LIME_local_unfaithfulness}")
-            overal_LIME_local_unfaithfulness += LIME_local_unfaithfulness
+        if weighted_merging:
+            weights, biases, input_size, output_size = merge_nodes_global(
+                scaled_data,
+                data_labels,
+                activations,
+                model,
+                shrinked_model,
+                preserve_percentage,
+                HIDDEN_LAYERS,
+                clustering_labels,
+                0,
+                example_weights)
+        else:
+            weights, biases, input_size, output_size = merge_nodes(
+                scaled_data,
+                data_labels,
+                activations,
+                model,
+                shrinked_model,
+                preserve_percentage,
+                HIDDEN_LAYERS,
+                clustering_labels,
+                0)
 
-            scores = explanation.as_list()
-            output = f"{test_index}:LIME: Original model feature attribution scores"
-            for index, feature_name in enumerate(feature_names):
-                output += ", " + str(feature_name)+f": {scores[index][1]}"
-            print(output)
+        truncated_weights = []
+        for index, weight in enumerate(weights):
+            truncated_weights.append(weight)
+            truncated_weights.append(biases[index])
 
-            # LIME explanations for the shrunken model
-            explanation, _ = explainer.explain_instance(X_test.values[example_index], shrinked_model.predict,
-                                                     num_features=len(feature_names),
-                                                     random_state=123, labels=[0,1,2])
+        # setting weights of the truncated model
+        shrinked_model.set_weights(truncated_weights)
 
-            scores_2 = explanation.as_list()
+        y_pred_test_shrinked = shrinked_model.predict(
+            np.array(scaled_data[0]).reshape((1, -1))).flatten()
+        y_pred_test = model.predict(np.array(scaled_data[0]).reshape((1, -1))).flatten()
 
-            output = f"{test_index}:LIME: Shrunken model feature attribution scores"
-            for index, feature_name in enumerate(feature_names):
-                output += ", " + str(feature_name) + f": {scores_2[index][1]}"
-                per_example_feature_attribution_distance += np.abs(scores[index][1] - scores_2[index][1])
+        print(f"Both Shrunken model and the Original model produce exactly the same output for test "
+              f"example at index {example_index}" if np.abs(y_pred_test_shrinked[0] - y_pred_test[0]) < 1e-6 else
+              f"Shurnken model's output {y_pred_test_shrinked[0]} is "
+              f"different from Original model's output {y_pred_test[0]}")
 
-            print(output)
-            print(f"Example {test_index} feature attribution distance: {per_example_feature_attribution_distance}")
-            feature_attribution_distance += per_example_feature_attribution_distance
+        # make a vector from all weights of the shrunken network. This will be used to remove the
+        all_weights = []
+        for weight in weights:
+            all_weights.extend(list(weight.reshape((-1,))))
 
-            structural_unfaithfulness = 0
-            #structural_fidelity
-            original_activations = utility_functions.compute_activations_for_each_layer(model,
-                                                                                        X_test.values)
-            shrunken_activations = utility_functions.compute_activations_for_each_layer(shrinked_model,
-                                                                                        X_test.values)
+        # visualize the shrunken model as QBAF.
+        # for test_index in range(0, 20):  # range(len(np.array(X_test))):
+        test_index = example_index
 
-            structural_unfaithfulness = 0
-            for i, original_activation in enumerate(original_activations):
-                pruned_activation = shrunken_activations[i]
-                if i != len(original_activations) - 1:
-                    for cluster_label in range(int(HIDDEN_LAYERS[i] * preserve_percentage / 100)):
-                        if cluster_label in clustering_labels[i]:
-                            structural_unfaithfulness += np.sum(np.abs(
-                                np.mean(original_activation[example_index, clustering_labels[i] == cluster_label]) -
-                                pruned_activation[
-                                    example_index, cluster_label]))
-                else:
-                    structural_unfaithfulness += np.sum(
-                        np.abs(pruned_activation[example_index, :] - original_activation[example_index, :]))
-            number_of_nodes = sum(truncated_model_dimensions) + y_onehot_test.shape[1]
-            structural_unfaithfulness /= (number_of_nodes)
-            print(f"Structural Unfaithfulness: {structural_unfaithfulness}")
+        input = np.array(scaled_data)[0]
+        output = np.array(data_labels)[0]
+        feature_names = X_test.columns.values
+        number_of_hidden_nodes = [int((preserve_percentage / 100) * hidden_layer) for hidden_layer in HIDDEN_LAYERS]
 
-            overal_structural_unfaithfulness += structural_unfaithfulness
-            #fidelity
-            example_unfaithfulness = np.sum(np.multiply(np.sum(np.power(shrinked_model.predict(X_test.values) -
-                                   model.predict(X_test.values), 2), axis=1),example_weights))/np.sum(example_weights)
-            overal_unfaithfulness += example_unfaithfulness
-            print(f"Unfaithfulness: {example_unfaithfulness}")
+        quantile = np.quantile(np.abs(np.array(all_weights)).reshape(1, -1), pruning_ratio)
+        weight_threshold = quantile
 
-        measures_for_visualization[j][1] = overal_unfaithfulness
-        measures_for_visualization[j][2] = overal_structural_unfaithfulness
+        from legacy.plot_QBAF import visualize_attack_and_supports_QBAF, general_method_for_visualize_attack_and_supports_QBAF
 
-        overal_unfaithfulness_list.append(overal_unfaithfulness / number_of_examples)
-        overal_structural_unfaithfulness_list.append(overal_structural_unfaithfulness/number_of_examples)
-        overal_LIME_local_unfaithfulness_list.append(overal_LIME_local_unfaithfulness / number_of_examples)
-        print(f"Total feature attribution distance {feature_attribution_distance / number_of_examples}")
-        print(f"Total LIME feature attribution similarity {1 - (feature_attribution_distance / number_of_examples)}")
-        print(f"Overal Structural Unfaithfulness: {overal_structural_unfaithfulness / number_of_examples}")
-        all_misclassifications.append(misclassification)
-        feature_attribution_list.append((feature_attribution_distance / number_of_examples))
+        general_method_for_visualize_attack_and_supports_QBAF(input, output, shrinked_model, feature_names,
+                                                              number_of_hidden_nodes,
+                                                              weight_threshold, weights, biases, Shrinkage_percentage,
+                                                              'cancer_local_graphs(shrunken_model)', 0)
 
-    print(measures_for_visualization)
-    print(feature_attribution_list)
+        # make a vector from all weights of the original network.
+        all_weights_original = []
+        original_weights = []
+        for layer in model.layers:
+            all_weights_original.extend(list(layer.get_weights()[0].reshape((-1,))))
+            original_weights.append(layer.get_weights()[0])
+
+        # visualize the original model
+        # for test_index in range(0, 20):  # range(len(np.array(X_test))):
+        input = np.array(scaled_data)[0]
+        output = np.array(data_labels)[0]
+        feature_names = X_test.columns.values
 
 
+        quantile = np.quantile(np.abs(np.array(all_weights_original)).reshape(1, -1), pruning_ratio)
+        weight_threshold = quantile
 
-# plt.show()
-# plt.plot(Shrinkage_percentage_list, overal_unfaithfulness_list, label="Our Local Explanations")
-# plt.plot(Shrinkage_percentage_list, overal_LIME_local_unfaithfulness_list, 'r', label="LIME local Explanations")
-# plt.xlabel('Compression Ratio')
-# plt.ylabel('Unfaithfulness')
-# plt.legend()
-# # plt.ylim([0,1])
-# plt.show()
+        from legacy.plot_QBAF import visualize_attack_and_supports_QBAF, general_clustered_visualize_attack_and_supports_QBAF
 
-print("Our average structural unfaithfulness: " + str(np.mean(overal_structural_unfaithfulness_list)))
+        general_clustered_visualize_attack_and_supports_QBAF(input, output, model, feature_names, HIDDEN_LAYERS,
+                                                             weight_threshold, original_weights, biases,
+                                                             Shrinkage_percentage,
+                                                             'cancer_local_graphs(original_model)',
+                                                             0, clustering_labels)
+
+
+        # LIME explanations for an example
+        explanation, LIME_local_unfaithfulness = explainer.explain_instance(scaled_data[0], model.predict,
+                                                                            num_features=len(feature_names),
+                                                                            random_state=123, top_labels=1)
+        print(f"Test Example {test_index}:LIME unfaithfulness = {LIME_local_unfaithfulness}")
+        overal_LIME_local_unfaithfulness += LIME_local_unfaithfulness
+
+
+        #Compute local unfaithfulness for our model
+
+        example_unfaithfulness = np.sum(np.multiply(np.sum(np.power(shrinked_model.predict(scaled_data) -
+                                                                    model.predict(scaled_data), 2), axis=1),
+                                                    example_weights)) / np.sum(example_weights)
+        print(f"Test Example {test_index}: unfaithfulness = {example_unfaithfulness}")
+        overal_unfaithfulness += example_unfaithfulness
+
+    LIME_local_unfaithfulness_list.append(overal_LIME_local_unfaithfulness/number_of_test_examples)
+    overal_unfaithfulness_list.append(overal_unfaithfulness/number_of_test_examples)
+    print(f"(ratio: {Shrinkage_percentage/100}) LIME unfaithfulness = {overal_LIME_local_unfaithfulness/number_of_test_examples}")
+    print(
+        f"(ratio: {Shrinkage_percentage / 100}) our unfaithfulness = {overal_unfaithfulness / number_of_test_examples}")
+
+print(f"Average LIME unfaithfulness = {np.mean(LIME_local_unfaithfulness_list)}")
+print(f"Average unfaithfulness of our approach= {np.mean(overal_unfaithfulness_list)}")

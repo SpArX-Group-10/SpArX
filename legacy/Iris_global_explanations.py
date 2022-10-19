@@ -331,7 +331,7 @@ def turn_off_specific_node_and_see_output(model, input, node_layer, node_indices
 
 
 
-import utility_functions
+import legacy.utility_functions as utility_functions
 def merge_nodes_globally(X_onehot, y_onehot, activations, model, shrunken_model, preserve_percentage, HIDDEN_LAYERS,
                 clustering_labels):
     # Based on the clustering step, we now shrink the model.
@@ -595,7 +595,7 @@ for Shrinkage_percentage in np.arange(20, 90, 20):
         quantile = np.quantile(np.abs(np.array(all_weights)).reshape(1, -1), pruning_ratio)
         weight_threshold = quantile
 
-        from plot_QBAF import visualize_attack_and_supports_QBAF, general_method_for_visualize_attack_and_supports_QBAF
+        from legacy.plot_QBAF import visualize_attack_and_supports_QBAF, general_method_for_visualize_attack_and_supports_QBAF
 
         general_method_for_visualize_attack_and_supports_QBAF(input, output, shrinked_model, feature_names,
                                                               number_of_hidden_nodes,
@@ -619,7 +619,7 @@ for Shrinkage_percentage in np.arange(20, 90, 20):
         quantile = np.quantile(np.abs(np.array(all_weights_original)).reshape(1, -1), pruning_ratio)
         weight_threshold = quantile
 
-        from plot_QBAF import visualize_attack_and_supports_QBAF, general_clustered_visualize_attack_and_supports_QBAF
+        from legacy.plot_QBAF import visualize_attack_and_supports_QBAF, general_clustered_visualize_attack_and_supports_QBAF
 
         general_clustered_visualize_attack_and_supports_QBAF(input, output, model, feature_names, HIDDEN_LAYERS,
                                                              weight_threshold, original_weights, biases,

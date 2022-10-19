@@ -650,7 +650,7 @@ if save_QBAFS:
         quantile = np.quantile(np.abs(np.array(all_weights)).reshape(1, -1), pruning_ratio)
         weight_threshold = quantile
 
-        from plot_QBAF import visualize_attack_and_supports_QBAF, general_method_for_visualize_attack_and_supports_QBAF
+        from legacy.plot_QBAF import visualize_attack_and_supports_QBAF, general_method_for_visualize_attack_and_supports_QBAF
 
         general_method_for_visualize_attack_and_supports_QBAF(input, output, shrinked_model, feature_names, number_of_hidden_nodes,
                                                               weight_threshold, weights, biases, Shrinkage_percentage,
@@ -677,7 +677,7 @@ if save_QBAFS:
         quantile = np.quantile(np.abs(np.array(all_weights_original)).reshape(1, -1), pruning_ratio)
         weight_threshold = quantile
 
-        from plot_QBAF import visualize_attack_and_supports_QBAF, general_clustered_visualize_attack_and_supports_QBAF
+        from legacy.plot_QBAF import visualize_attack_and_supports_QBAF, general_clustered_visualize_attack_and_supports_QBAF
 
 
         general_clustered_visualize_attack_and_supports_QBAF(input, output, model, feature_names, HIDDEN_LAYERS,
