@@ -11,7 +11,7 @@ class Clusterer:
 
     @staticmethod
     @abstractmethod
-    def cluster_layer(num_clusters: int, data: np.ndarray) -> np.ndarray:
+    def cluster_layer(num_clusters: int, data: np.ndarray, seed: int) -> np.ndarray:
         """Clusters the given model.
 
         :param
@@ -24,7 +24,7 @@ class Clusterer:
 
 
     @classmethod
-    def cluster(cls, mlp: FFNN, num_clusters: int) -> np.ndarray:
+    def cluster(cls, mlp: FFNN, num_clusters: int, seed: int = np.random.randint(0, 2**32 - 1)) -> np.ndarray:
         """Clusters the given model.
 
         :param
@@ -38,7 +38,7 @@ class Clusterer:
         for index in range(1, len(mlp.shape) - 1):
             activation = mlp.forward_pass_data[index - 1]
             clustering_input = activation.T
-            clustering_labels.append(cls.cluster_layer(num_clusters, clustering_input))
+            clustering_labels.append(cls.cluster_layer(num_clusters, clustering_input, seed))
         return clustering_labels
 
 
@@ -46,13 +46,13 @@ class KMeansClusterer(Clusterer):
     """KMeans clustering algorithm."""
 
     @staticmethod
-    def cluster_layer(num_clusters: int, data: np.ndarray) -> np.ndarray:
-        return KMeans(n_clusters=num_clusters).fit(data).labels_
+    def cluster_layer(num_clusters: int, data: np.ndarray, seed: int) -> np.ndarray:
+        return KMeans(n_clusters=num_clusters, random_state=seed).fit(data).labels_
 
 
 class AgglomerativeClusterer(Clusterer):
     """Agglomerative clustering algorithm."""
 
     @staticmethod
-    def cluster_layer(num_clusters: int, data: np.ndarray) -> np.ndarray:
+    def cluster_layer(num_clusters: int, data: np.ndarray, seed: int) -> np.ndarray:
         return AgglomerativeClustering(n_clusters=num_clusters).fit(data).labels_
