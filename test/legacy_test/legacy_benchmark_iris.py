@@ -47,7 +47,7 @@ from sklearn.cluster import KMeans, AgglomerativeClustering
 
 def get_benchmarks():
     import test.benchmark as benchmark
-
+    
 
     """
     ------------------------------------------
@@ -91,7 +91,7 @@ def get_benchmarks():
 
         config = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
         config.gpu_options.allow_growth = True
-        tf.compat.v1.set_random_seed(1)
+        tf.compat.v1.random.set_random_seed(1)
         sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=config)
         K.set_session(sess)
 
@@ -119,7 +119,7 @@ def get_benchmarks():
     y = data[["class"]]
 
     # Randomize
-    X = X.sample(frac=1, random_state=2020)
+    #X = X.sample(frac=1, random_state=2020)
     y = y.loc[X.index.values]
     X.reset_index(inplace=True, drop=True)
     y.reset_index(inplace=True, drop=True)
@@ -166,17 +166,19 @@ def get_benchmarks():
 
         if len(hidden_layers_size) == 0:
             # No hidden layer (linear regression equivalent)
-            ff_layers = [Dense(output_size, input_shape=(input_size,), activation='softmax')]
+            ff_layers = [Dense(output_size, input_shape=(input_size,), activation='softmax', kernel_initializer=tf.keras.initializers.GlorotUniform(seed=5))]
         else:
             # With sigmoid hidden layers
             ff_layers = [
-                Dense(hidden_layers_size[0], input_shape=(input_size,), activation='relu'),
-                Dense(output_size, activation='softmax')
+                Dense(hidden_layers_size[0], input_shape=(input_size,), activation='relu', kernel_initializer=tf.keras.initializers.GlorotUniform(seed=5)),
+                Dense(output_size, activation='softmax', kernel_initializer=tf.keras.initializers.GlorotUniform(seed=5))
             ]
             for hidden_size in hidden_layers_size[1:]:
-                ff_layers.insert(-1, Dense(hidden_size, activation='relu'))
+                ff_layers.insert(-1, Dense(hidden_size, activation='relu', kernel_initializer=tf.keras.initializers.GlorotUniform(seed=5)))
 
         model = Sequential(ff_layers)
+        print("WEIGHTS")
+        print(model.get_weights())
 
         model.compile(optimizer='adam',
                     loss='categorical_crossentropy',
@@ -198,7 +200,6 @@ def get_benchmarks():
                             callbacks=[early_stopping], validation_data=(X_validate, y_validate_onehot))
 
         return history
-
 
     model = get_FFNN_model(X, y_onehot, HIDDEN_LAYERS)
 
