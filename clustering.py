@@ -24,7 +24,7 @@ class Clusterer:
 
 
     @classmethod
-    def cluster(cls, mlp: FFNN, num_clusters: int, seed: int = np.random.randint(0, 2**32 - 1)) -> np.ndarray:
+    def cluster(cls, mlp: FFNN, num_clusters: int, seed: int = np.random.randint(0, 2**31 - 1)) -> np.ndarray:
         """Clusters the given model.
 
         :param
@@ -35,7 +35,7 @@ class Clusterer:
         """
 
         clustering_labels = []
-        for index in range(1, len(mlp.shape) - 1):
+        for index in range(1, len(mlp.model.layers)):
             activation = mlp.forward_pass_data[index - 1]
             clustering_input = activation.T
             clustering_labels.append(cls.cluster_layer(num_clusters, clustering_input, seed))
