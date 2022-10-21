@@ -4,7 +4,7 @@ import numpy as np
 
 from ffnn import FFNN
 from clustering import KMeansClusterer
-from merging import GlobalMerger
+from merging import LocalMerger
 
 
 shape = (4, 5, 6, 3)
@@ -37,6 +37,6 @@ cluster_labels = KMeansClusterer.cluster(restored_model, 2)
 
 
 # merge clusters
-merged_model = GlobalMerger.merge(restored_model, cluster_labels)
+merged_model = LocalMerger.merge(restored_model, cluster_labels)
 restored_model.model.summary()
 merged_model.model.summary()
