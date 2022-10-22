@@ -6,7 +6,7 @@ from model_encoder import Model, Framework
 
 class ModelEncoderTest(unittest.TestCase):
     """Model encoder tests"""
-    
+
     def test_get_keras_model_info(self):
         """Test model info encoding."""
         ff_layers = [

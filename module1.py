@@ -6,7 +6,6 @@ import keras # pylint: disable=import-error
 from keras import backend as kbackend # pylint: disable=import-error
 from keras.models import Sequential, Model # pylint: disable=import-error
 from keras.layers import Dense # pylint: disable=import-error
-import sklearn # pylint: disable=import-error
 from sklearn.datasets import load_breast_cancer # pylint: disable=import-error
 from sklearn.model_selection import train_test_split # pylint: disable=import-error
 import pandas as pd # pylint: disable=import-error
