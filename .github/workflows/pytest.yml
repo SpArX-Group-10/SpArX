@@ -3,7 +3,7 @@ name: Pytest
 on: [push]
 
 jobs:
-  python-linting:
+  python-testing:
     runs-on: ubuntu-latest
     container:
       image: ss450555/python-sparx
