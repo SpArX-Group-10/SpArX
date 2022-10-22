@@ -7,12 +7,15 @@ from clustering import KMeansClusterer
 from merging import LocalMerger
 
 
-shape = (4, 5, 6, 3)
+# shrink to a decimal percentage
+SHRINK_TO_PERCENTAGE = 1
+
+shape = (4, 6, 6, 3)
 
 model = Sequential([
-    Dense(5, activation='relu', input_shape=(4,)),
-    Dense(6, activation='relu'),
-    Dense(3, activation='relu'),
+    Dense(shape[0], activation='relu', input_shape=(shape[0],)),
+    Dense(shape[1], activation='relu'),
+    Dense(shape[2], activation='relu'),
 ])
 
 
@@ -32,9 +35,9 @@ np.random.seed(42)
 dataset = np.random.rand(10, 4)
 restored_model.forward_pass(dataset)
 
-# cluster into 2 clusters
-cluster_labels = KMeansClusterer.cluster(restored_model, 2)
 
+# cluster into 2 clusters
+cluster_labels = KMeansClusterer.cluster(restored_model, SHRINK_TO_PERCENTAGE)
 
 # merge clusters
 merged_model = LocalMerger.merge(restored_model, cluster_labels)
