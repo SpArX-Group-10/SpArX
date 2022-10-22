@@ -1,11 +1,11 @@
-from model_encoder import Model, Framework
 import unittest
-import keras
-from keras.models import Sequential
-from keras.layers import Dense, Input
+import keras # pylint: disable=import-error
+from keras.models import Sequential # pylint: disable=import-error
+from keras.layers import Dense, Input # pylint: disable=import-error
+from model_encoder import Model, Framework
 
 class ModelEncoderTest(unittest.TestCase):
-    
+
     def test_get_keras_model_info(self):
         ff_layers = [
             Input(shape=(5,)),
@@ -20,21 +20,36 @@ class ModelEncoderTest(unittest.TestCase):
         self.assertEqual(len(res.biases), 1)
         self.assertEqual(res.biases[0].shape, (2,))
         self.assertEqual(res.activation_functions, ['relu'])
-        
+
     def test_activation_to_str(self):
-        self.assertEqual(Model.activation_to_str(keras.activations.softmax), "softmax")
-        self.assertEqual(Model.activation_to_str(keras.activations.relu), "relu")
-        self.assertEqual(Model.activation_to_str(keras.activations.tanh), "tanh")
-        self.assertRaises(NotImplementedError, Model.activation_to_str, "Not an activation function")
-        
+        self.assertEqual(
+            Model.activation_to_str(
+                keras.activations.softmax),
+            "softmax")
+        self.assertEqual(
+            Model.activation_to_str(
+                keras.activations.relu),
+            "relu")
+        self.assertEqual(
+            Model.activation_to_str(
+                keras.activations.tanh),
+            "tanh")
+        self.assertRaises(
+            NotImplementedError,
+            Model.activation_to_str,
+            "Not an activation function")
+
     def test_transform(self):
         ff_layers = [
             Input(shape=(5,)),
             Dense(2, activation='relu'),
         ]
         model = Sequential(ff_layers)
-        self.assertRaises(NotImplementedError, Model.transform, model, Framework.PYTORCH)
-
+        self.assertRaises(
+            NotImplementedError,
+            Model.transform,
+            model,
+            Framework.PYTORCH)
 
 if __name__ == '__main__':
     unittest.main()

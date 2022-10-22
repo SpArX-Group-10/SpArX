@@ -1,6 +1,20 @@
+from keras.layers import Dense, Embedding, Conv1D, GlobalMaxPool1D, Input, concatenate, Dropout, Activation, BatchNormalization
+from keras.models import Sequential, Model
 import numpy as np
 from datetime import datetime, date, timedelta
-import string, pickle, json, sys, os, itertools, random, math, time, re, hashlib, warnings, subprocess
+import string
+import pickle
+import json
+import sys
+import os
+import itertools
+import random
+import math
+import time
+import re
+import hashlib
+import warnings
+import subprocess
 
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import CategoricalNB
@@ -14,7 +28,6 @@ from sklearn.cluster import KMeans, AgglomerativeClustering
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 
-
 EPOCHS = 1000
 PATIENCE = 100
 BATCH_SIZE = 64
@@ -24,7 +37,6 @@ os.environ['PYTHONHASHSEED'] = '0'
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 # Model Training
-from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", category=FutureWarning)
@@ -35,17 +47,23 @@ with warnings.catch_warnings():
     from tensorflow.python.keras import backend as K
     from keras.utils.np_utils import to_categorical
 
-    config = tf.compat.v1.ConfigProto(intra_op_parallelism_threads=1, inter_op_parallelism_threads=1)
+    config = tf.compat.v1.ConfigProto(
+        intra_op_parallelism_threads=1,
+        inter_op_parallelism_threads=1)
     config.gpu_options.allow_growth = True
     tf.compat.v1.set_random_seed(1)
-    sess = tf.compat.v1.Session(graph=tf.compat.v1.get_default_graph(), config=config)
+    sess = tf.compat.v1.Session(
+        graph=tf.compat.v1.get_default_graph(),
+        config=config)
     K.set_session(sess)
 
     # Check that we are using the standard configuration for channels
     assert K.image_data_format() == 'channels_last'
 
+
 def sigmoid(z):
     return 1 / (1 + np.exp(-z))
+
 
 class MultiColumnLabelEncoder:
     def __init__(self, columns):
@@ -74,8 +92,6 @@ class MultiColumnLabelEncoder:
 
 
 # Model Creation
-from keras.models import Sequential, Model
-from keras.layers import Dense, Embedding, Conv1D, GlobalMaxPool1D, Input, concatenate, Dropout, Activation,BatchNormalization
 
 
 # evaluating model
@@ -93,7 +109,8 @@ def precision_m(y_true, y_pred):
     return precision
 
 
-# constructing model. Structure: input, multiple hidden layers(relu), output(relu, sigmoid)
+# constructing model. Structure: input, multiple hidden layers(relu),
+# output(relu, sigmoid)
 def get_FFNN_model(X, y, hidden_layers_size=[4]):
     """
         BASIC MODEL for the FF-NN
@@ -103,13 +120,20 @@ def get_FFNN_model(X, y, hidden_layers_size=[4]):
 
     if len(hidden_layers_size) == 0:
         # No hidden layer (linear regression equivalent)
-        ff_layers = [Dense(output_size, input_shape=(input_size,), activation='softmax')]
+        ff_layers = [
+            Dense(
+                output_size,
+                input_shape=(
+                    input_size,
+                ),
+                activation='softmax')]
     else:
         # Last hidden layer and the output layer
         ff_layers = [
-            Dense(hidden_layers_size[0], input_shape=(input_size,), activation="relu"),
-            Dense(output_size, activation='sigmoid')
-        ]
+            Dense(
+                hidden_layers_size[0], input_shape=(
+                    input_size,), activation="relu"), Dense(
+                output_size, activation='sigmoid')]
         # other hidden layers (if more than one hidden layer exists)
         for hidden_size in hidden_layers_size[1:]:
             ff_layers.insert(-1, Dense(hidden_size, activation='relu'))
@@ -122,7 +146,10 @@ def get_FFNN_model(X, y, hidden_layers_size=[4]):
     # model.summary()
     return model
 
-# constructing model. Structure: input, multiple hidden layers(relu), output(relu, softmax)
+# constructing model. Structure: input, multiple hidden layers(relu),
+# output(relu, softmax)
+
+
 def get_FFNN_model_non_binary(X, y, hidden_layers_size=[4]):
     """
         BASIC MODEL for the FF-NN
@@ -132,13 +159,20 @@ def get_FFNN_model_non_binary(X, y, hidden_layers_size=[4]):
 
     if len(hidden_layers_size) == 0:
         # No hidden layer (linear regression equivalent)
-        ff_layers = [Dense(output_size, input_shape=(input_size,), activation='softmax')]
+        ff_layers = [
+            Dense(
+                output_size,
+                input_shape=(
+                    input_size,
+                ),
+                activation='softmax')]
     else:
         # With sigmoid hidden layers
         ff_layers = [
-            Dense(hidden_layers_size[0], input_shape=(input_size,), activation='relu'),
-            Dense(output_size, activation='softmax')
-        ]
+            Dense(
+                hidden_layers_size[0], input_shape=(
+                    input_size,), activation='relu'), Dense(
+                output_size, activation='softmax')]
         for hidden_size in hidden_layers_size[1:]:
             ff_layers.insert(-1, Dense(hidden_size, activation='relu'))
 
@@ -152,21 +186,45 @@ def get_FFNN_model_non_binary(X, y, hidden_layers_size=[4]):
 
 
 # train FFNN
-def net_train(model, bestmodel_path, X_train, y_train_onehot, X_validate, y_validate_onehot, epochs=EPOCHS,
-              batch_size=BATCH_SIZE, patience=PATIENCE):
+def net_train(
+        model,
+        bestmodel_path,
+        X_train,
+        y_train_onehot,
+        X_validate,
+        y_validate_onehot,
+        epochs=EPOCHS,
+        batch_size=BATCH_SIZE,
+        patience=PATIENCE):
     # Define four callbacks to use
-    checkpointer = ModelCheckpoint(filepath=bestmodel_path, verbose=1, save_best_only=True)
+    checkpointer = ModelCheckpoint(
+        filepath=bestmodel_path,
+        verbose=1,
+        save_best_only=True)
     early_stopping = EarlyStopping(monitor='val_loss', patience=patience)
 
     # Train the model
-    history = model.fit(X_train, y_train_onehot, verbose=2, epochs=epochs, batch_size=batch_size,
-                        callbacks=[checkpointer, early_stopping], validation_data=(X_validate, y_validate_onehot))
+    history = model.fit(
+        X_train,
+        y_train_onehot,
+        verbose=2,
+        epochs=epochs,
+        batch_size=batch_size,
+        callbacks=[
+            checkpointer,
+            early_stopping],
+        validation_data=(
+            X_validate,
+            y_validate_onehot))
 
     return history
 
 
-
-def compare_shrinked_with_original(y_ground_truth, y_pred_original_model, y_pred_shrinked_model, shrink_percentage):
+def compare_shrinked_with_original(
+        y_ground_truth,
+        y_pred_original_model,
+        y_pred_shrinked_model,
+        shrink_percentage):
     false_predictions = 0
     better_predictions = 0
     false_yes = 0
@@ -178,11 +236,11 @@ def compare_shrinked_with_original(y_ground_truth, y_pred_original_model, y_pred
         'No': False
     })
     for i in range(len(y_ground_truth)):
-        if y_pred_original_model[i] == False and y_pred_shrinked_model[i] == True:
+        if y_pred_original_model[i] == False and y_pred_shrinked_model[i]:
             false_yes += 1
-        elif y_pred_original_model[i] == True and y_pred_shrinked_model[i] == False:
+        elif y_pred_original_model[i] and y_pred_shrinked_model[i] == False:
             false_no += 1
-        elif y_pred_original_model[i] == True and y_pred_shrinked_model[i] == True:
+        elif y_pred_original_model[i] and y_pred_shrinked_model[i]:
             true_yes += 1
         elif y_pred_original_model[i] == False and y_pred_shrinked_model[i] == False:
             true_no += 1
@@ -205,9 +263,9 @@ def divide_two_classes(Y_GT, Y_Pred):
     for i in range(len(np.array(Y_GT))):
         if Y_GT[i] == 'No' and Y_Pred[i] == False:
             confusion[0, 0] += 1
-        elif Y_GT[i] == 'No' and Y_Pred[i] == True:
+        elif Y_GT[i] == 'No' and Y_Pred[i]:
             confusion[0, 1] += 1
-        elif Y_GT[i] == 'Yes' and Y_Pred[i] == True:
+        elif Y_GT[i] == 'Yes' and Y_Pred[i]:
             confusion[1, 1] += 1
         else:
             confusion[1, 0] += 1
@@ -220,8 +278,12 @@ def plot_confusion(confusion_array):
     import pandas as pd
     import matplotlib.pyplot as plt
 
-    df_cm = pd.DataFrame(confusion_array, index=[i for i in ['Yes_GT', 'No_GT']],
-                         columns=[i for i in ['Yes_Pred', 'No_Pred']])
+    df_cm = pd.DataFrame(
+        confusion_array, index=[
+            i for i in [
+                'Yes_GT', 'No_GT']], columns=[
+            i for i in [
+                'Yes_Pred', 'No_Pred']])
     plt.figure(figsize=(10, 7))
     sn.heatmap(df_cm, annot=True, fmt='g')
     plt.show()
