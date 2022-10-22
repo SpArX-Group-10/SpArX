@@ -52,7 +52,7 @@ from keras.utils import plot_model
 import os
 from sklearn.cluster import KMeans, AgglomerativeClustering
 
-import utility_functions
+import legacy.utility_functions as utility_functions
 import iris_load_dataset
 
 import matplotlib.pyplot as plt
@@ -510,7 +510,7 @@ for Shrinkage_percentage in range(20, 90, 20):
             quantile = np.quantile(np.abs(np.array(all_weights)).reshape(1, -1), pruning_ratio)
             weight_threshold = quantile
 
-            from plot_QBAF import visualize_attack_and_supports_QBAF, general_method_for_visualize_attack_and_supports_QBAF
+            from legacy.plot_QBAF import visualize_attack_and_supports_QBAF, general_method_for_visualize_attack_and_supports_QBAF
 
             general_method_for_visualize_attack_and_supports_QBAF(input, output, shrinked_model, feature_names,
                                                                   number_of_hidden_nodes,
@@ -533,7 +533,7 @@ for Shrinkage_percentage in range(20, 90, 20):
             quantile = np.quantile(np.abs(np.array(all_weights_original)).reshape(1, -1), pruning_ratio)
             weight_threshold = quantile
 
-            from plot_QBAF import visualize_attack_and_supports_QBAF, general_clustered_visualize_attack_and_supports_QBAF
+            from legacy.plot_QBAF import visualize_attack_and_supports_QBAF, general_clustered_visualize_attack_and_supports_QBAF
 
             general_clustered_visualize_attack_and_supports_QBAF(input, output, model, feature_names, HIDDEN_LAYERS,
                                                                  weight_threshold, original_weights, biases,

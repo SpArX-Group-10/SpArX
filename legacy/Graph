@@ -1,0 +1,17 @@
+// A Round Graph
+digraph {
+	rankdir=LR
+	splines=line
+	I1 [label=sex_Male]
+	I11 [label="juv_fel_count_0 juv fel"]
+	I27 [label="priors_count_5-9 priors"]
+	I30 [label=is_violent_recid_No]
+	I36 [label="custody_10-29 days"]
+	I39 [label=charge_desc_Assault]
+	node [shape=circle]
+	H1 [color=red]
+	O0 [label="GT(No)_Pred(No): 0.4112789" color=red]
+	I11 -> H1 [color=green penwidth=1.2542849704623222]
+	I30 -> H1 [color=green penwidth=1.416825478275617]
+	H1 -> O0 [label="[-0.19536488]" color=red penwidth="[0.19536488]"]
+}
