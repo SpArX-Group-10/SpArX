@@ -29,19 +29,18 @@ class Module1Test(unittest.TestCase):
 
     # Tests for approach 2: training a model given parameters
     def test_import_dataset(self):
-        filepath = "data/test_data.csv"
+        filepath = "tests/data/test_data.csv"
         data_entries, labels = import_dataset(filepath)
         self.assertEqual(data_entries.shape, (3, 2))
         self.assertEqual(labels.shape, (3,))
         
     def test_import_dataset_features(self):
-        filepath = "data/test_data.csv"
+        filepath = "tests/data/test_data.csv"
         data_entries, labels = import_dataset(filepath, ["name"])
         self.assertEqual(data_entries.shape, (3, 1))
         self.assertEqual(labels.shape, (3,))
-
-    def test_
         
 
 if __name__ == '__main__':
     Module1Test().test_import_dataset()
+    Module1Test().test_import_dataset_features()
