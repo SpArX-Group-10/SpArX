@@ -1,18 +1,14 @@
 from enum import Enum, auto
-import re
 
 # Model Creation
 from tensorflow import keras
-from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.models import Sequential, Model
-from keras.layers import Dense, Embedding, Conv1D, GlobalMaxPool1D, Input, concatenate, Dropout, Activation
+from keras.layers import Dense
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 import pandas as pd
 from pandas import DataFrame
 from typing import Optional, Tuple
-
-import legacy.compas_load_and_preprocess
 
 # hidden layers
 HIDDEN_LAYERS = [50, 50]
@@ -27,9 +23,11 @@ class Framework(Enum):
 
 # Approach 1: User inputs a pre-trained model
 def import_model(framework: Framework, model: any) -> keras.Model:
+    # Verification
     match framework:
+        # Keras model
         case Framework.KERAS:
-            if not model.isinstance(keras.Model):
+            if not isinstance(model, keras.Model):
                 raise ValueError("Model is not a Keras model.")
             if not verify_keras_model_is_fnn(model): 
                 raise ValueError("Model is not a feed-forward neural network.")
@@ -38,13 +36,13 @@ def import_model(framework: Framework, model: any) -> keras.Model:
             raise ValueError("Unsupported framework: {}!", framework)
 
 def verify_keras_model_is_fnn(model: keras.Model) -> bool:
-    # TODO: verify that the model is a feed-forward neural network
-    # Verify all layers are dense layers
+    # Verify that the model is a feed-forward neural network.
+    # Check that all hidden layers are dense layers.
     for layer in model.layers:
-        if not layer.isinstance(keras.layers.Dense):
+        if not isinstance(layer, keras.layers.Dense):
             return False
-    # Verify that the model is a sequential model
-    return model.isinstance(keras.Sequential)
+    # Verify that the model is a sequential model.
+    return isinstance(model, keras.Sequential)
     
 # Approach 2: we train it using
 # - Dataset
@@ -67,8 +65,8 @@ def import_dataset(filepath: str, features: Optional[list[str]]=None) -> Tuple[D
     # Assuming the dataset is in the same directory as the module
     # Assuming last column is the label and the rest are features
     # Assuming first row is the header
+    
     raw_data = pd.read_csv(filepath)
-    # print(raw_data)
     if features:
         header = list(raw_data.columns[1:-1])
         both = set(features).intersection(header)
@@ -112,9 +110,6 @@ def load_preset_dataset(dataset: str) -> Tuple[DataFrame, DataFrame]:
         case _:
             raise Exception("Unsupported dataset option.")
 
-
-
-
 # evaluating model
 def recall_m(y_true, y_pred):
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
@@ -128,7 +123,6 @@ def precision_m(y_true, y_pred):
     predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
     precision = true_positives / (predicted_positives + K.epsilon())
     return precision
-
 
 # constructing model. Structure: input, multiple hidden layers(relu), output(relu, sigmoid)
 def get_FFNN_model(X, y, hidden_layers_size=[4]):
@@ -187,13 +181,11 @@ def get_FFNN_model_general(X: DataFrame, y: DataFrame, activation_funcs: list[st
     model.summary()
     return model
 
+# train FFNN
+def net_train(model, X_train, y_train_onehot, X_validate, y_validate_onehot, epochs=EPOCHS):
 
+    # Train the model
+    history = model.fit(X_train, y_train_onehot, verbose=2, epochs=epochs, batch_size=BATCH_SIZE,
+                        validation_data=(X_validate, y_validate_onehot))
 
-    # train FFNN
-    def net_train(model, X_train, y_train_onehot, X_validate, y_validate_onehot, epochs=EPOCHS):
-
-        # Train the model
-        history = model.fit(X_train, y_train_onehot, verbose=2, epochs=epochs, batch_size=BATCH_SIZE,
-                            validation_data=(X_validate, y_validate_onehot))
-
-        return history
+    return history

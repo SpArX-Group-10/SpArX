@@ -1,7 +1,8 @@
 from module1 import import_dataset, import_model, Framework
 import unittest
-from keras.models import Sequential, Model
-from keras.layers import Dense, Embedding, Conv1D, GlobalMaxPool1D, Input, concatenate, Dropout, Activation
+from keras.models import Sequential
+from keras.layers import Activation, Dense, Input
+
 
 class Module1Test(unittest.TestCase):
 
@@ -22,7 +23,8 @@ class Module1Test(unittest.TestCase):
         ff_layers = [
             Input(shape=(10,)),
             Dense(10, activation='relu'),
-            Dense(2, activation='softmax')
+            Dense(2, activation='softmax'),
+            Activation('relu')
         ]
         model = Sequential(ff_layers)
         self.assertRaises(ValueError, import_model, Framework.KERAS, model)
@@ -39,8 +41,24 @@ class Module1Test(unittest.TestCase):
         data_entries, labels = import_dataset(filepath, ["name"])
         self.assertEqual(data_entries.shape, (3, 1))
         self.assertEqual(labels.shape, (3,))
+    
+    def test_train_model(self):
+        self.assertTrue(False and "not implemented")
+    
+    def test_recall_m(self):
+        self.assertTrue(False and "not implemented")
+    
+    def test_precision_m(self):
+        self.assertTrue(False and "not implemented")
+    
+    def test_get_ffnn_model(self):
+        self.assertTrue(False and "not implemented")
+
+    def test_get_general_ffnn_model(self):
+        self.assertTrue(False and "not implemented")
         
+    def test_net_train(self):
+        self.assertTrue(False and "not implemented")
 
 if __name__ == '__main__':
-    Module1Test().test_import_dataset()
-    Module1Test().test_import_dataset_features()
+    unittest.main()
