@@ -17,10 +17,11 @@ def clusters() -> list[np.ndarray, np.ndarray]:
     """ Returns the clustering labels after clustering our custom dataset. """
     shape = (4, 6, 6, 3)
     model = Sequential([
-    Dense(6, activation='relu', input_shape=(4,), kernel_initializer=tf.keras.initializers.GlorotUniform(seed=5)),
-    Dense(6, activation='relu', kernel_initializer=tf.keras.initializers.GlorotUniform(seed=5)),
-    Dense(3, activation='relu', kernel_initializer=tf.keras.initializers.GlorotUniform(seed=5)),
-])
+        Dense(6, activation='relu', input_shape=(4,), kernel_initializer=tf.keras.initializers.GlorotUniform(seed=5)),
+        Dense(6, activation='relu', kernel_initializer=tf.keras.initializers.GlorotUniform(seed=5)),
+        Dense(3, activation='relu', kernel_initializer=tf.keras.initializers.GlorotUniform(seed=5)),
+    ])
+
     weights = [layer.get_weights()[0] for layer in model.layers]
     bias = [layer.get_weights()[1] for layer in model.layers]
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -28,8 +29,8 @@ def clusters() -> list[np.ndarray, np.ndarray]:
     restored_model = FFNN(shape, weights, bias, activations)
     dataset = np.loadtxt("./test/data/iris-test.data", delimiter=",", usecols=(0,1,2,3))
     restored_model.forward_pass(dataset)
-    n_clusters_ = int((50 / 100) * 6)
-    return KMeansClusterer.cluster(restored_model, n_clusters_, seed=1)
+    shrinkage = 0.5
+    return KMeansClusterer.cluster(restored_model, shrinkage, seed=1)
 
 
 def test_clusters(benchmark_data: BenchmarkData, clusters: list[np.ndarray, np.ndarray]) -> None:
