@@ -1,4 +1,4 @@
-name: Pylint
+name: Pytest
 
 on: [push]
 
@@ -8,6 +8,6 @@ jobs:
     container:
       image: ss450555/python-sparx
     steps:
-    - name: Analysing the code with pylint
+    - name: Testing the code with pytest
       run: |
-        pylint $(find . -name "*.py" | xargs)
+        pytest
