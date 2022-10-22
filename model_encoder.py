@@ -20,8 +20,8 @@ class Model:
     """Model class"""
     @staticmethod
     def transform(model: any, framework: Framework):
-        
-        """Transform model to encoded form."""match framework:
+        """Transform model to encoded form."""
+        match framework:
             case Framework.KERAS:
             # Transformation
                 return Model.get_keras_model_info(model)
