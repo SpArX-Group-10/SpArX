@@ -3,9 +3,10 @@ from enum import Enum, auto
 # Model Creation
 from typing import Optional, Tuple
 import keras # pylint: disable=import-error
-from tensorflow.python.keras import backend as kbackend # pylint: disable=import-error
+from keras import backend as kbackend # pylint: disable=import-error
 from keras.models import Sequential, Model # pylint: disable=import-error
 from keras.layers import Dense # pylint: disable=import-error
+import sklearn # pylint: disable=import-error
 from sklearn.datasets import load_breast_cancer # pylint: disable=import-error
 from sklearn.model_selection import train_test_split # pylint: disable=import-error
 import pandas as pd # pylint: disable=import-error
@@ -96,8 +97,8 @@ def load_preset_dataset(dataset: str) -> Tuple[DataFrame, DataFrame]:
     match dataset:
         case "breast cancer":
             data = load_breast_cancer()
-            x_data = pd.DataFrame(data.data)
-            y_data = pd.DataFrame(data.target)
+            x_data = pd.DataFrame(data.data) # pylint: disable=no-member
+            y_data = pd.DataFrame(data.target) # pylint: disable=no-member
             return (x_data, y_data)
 
         case _:

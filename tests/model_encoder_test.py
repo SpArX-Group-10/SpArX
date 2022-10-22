@@ -5,8 +5,10 @@ from keras.layers import Dense, Input # pylint: disable=import-error
 from model_encoder import Model, Framework
 
 class ModelEncoderTest(unittest.TestCase):
-
+    """Model encoder tests"""
+    
     def test_get_keras_model_info(self):
+        """Test model info encoding."""
         ff_layers = [
             Input(shape=(5,)),
             Dense(2, activation='relu'),
@@ -22,6 +24,7 @@ class ModelEncoderTest(unittest.TestCase):
         self.assertEqual(res.activation_functions, ['relu'])
 
     def test_activation_to_str(self):
+        """Test translate function from activation function to string."""
         self.assertEqual(
             Model.activation_to_str(
                 keras.activations.softmax),
@@ -40,6 +43,7 @@ class ModelEncoderTest(unittest.TestCase):
             "Not an activation function")
 
     def test_transform(self):
+        """Test transform"""
         ff_layers = [
             Input(shape=(5,)),
             Dense(2, activation='relu'),
