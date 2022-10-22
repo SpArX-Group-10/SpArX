@@ -197,7 +197,7 @@ def get_ffnn_model_general(
 # train FFNN
 
 
-def net_train(
+def net_train( # pylint: disable=too-many-arguments
         model,
         x_train,
         y_train_onehot,

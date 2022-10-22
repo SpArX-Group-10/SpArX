@@ -5,7 +5,7 @@ import keras # pylint: disable=import-error
 class Framework(Enum):
     """Framework enum"""
     KERAS = auto()
-    PYTORCH = auto()  
+    PYTORCH = auto()
 
 class EncodedModel:
     """Encoded model class."""
@@ -19,9 +19,9 @@ class EncodedModel:
 class Model:
     """Model class"""
     @staticmethod
-    def """Transform model to encod"""transform(model: any, framework: Framework):
+    def transform(model: any, framework: Framework):
         
-        match framework:
+        """Transform model to encoded form."""match framework:
             case Framework.KERAS:
             # Transformation
                 return Model.get_keras_model_info(model)
