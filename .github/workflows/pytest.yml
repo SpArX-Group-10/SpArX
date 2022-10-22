@@ -8,6 +8,7 @@ jobs:
     container:
       image: ss450555/python-sparx
     steps:
+    - uses: actions/checkout@v3
     - name: Testing the code with pytest
       run: |
         pytest

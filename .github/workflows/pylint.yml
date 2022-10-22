@@ -8,6 +8,7 @@ jobs:
     container:
       image: ss450555/python-sparx
     steps:
+    - uses: actions/checkout@v3
     - name: Analysing the code with pylint
       run: |
         pylint $(find . -name "*.py" | xargs)
