@@ -5,6 +5,7 @@ import numpy as np
 from ffnn import FFNN
 from clustering import KMeansClusterer
 from merging import LocalMerger
+from visualiser import SimpleVisualizer
 
 
 # shrink to a decimal percentage
@@ -13,9 +14,9 @@ SHRINK_TO_PERCENTAGE = 1
 shape = (4, 6, 6, 3)
 
 model = Sequential([
-    Dense(shape[0], activation='relu', input_shape=(shape[0],)),
-    Dense(shape[1], activation='relu'),
+    Dense(shape[1], activation='relu', input_shape=(shape[0],)),
     Dense(shape[2], activation='relu'),
+    Dense(shape[3], activation='relu'),
 ])
 
 
@@ -43,3 +44,5 @@ cluster_labels = KMeansClusterer.cluster(restored_model, SHRINK_TO_PERCENTAGE)
 merged_model = LocalMerger.merge(restored_model, cluster_labels)
 restored_model.model.summary()
 merged_model.model.summary()
+
+SimpleVisualizer.visualise(merged_model)
