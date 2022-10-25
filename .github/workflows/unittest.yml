@@ -1,0 +1,14 @@
+name: Unittest
+
+on: [push]
+
+jobs:
+  python-testing:
+    runs-on: ubuntu-latest
+    container:
+      image: ss450555/python-sparx
+    steps:
+    - uses: actions/checkout@v3
+    - name: Testing the code with unittest
+      run: |
+        python3 -m unittest tests/model_encoder_test.py && python3 -m unittest tests/module1_test.py
