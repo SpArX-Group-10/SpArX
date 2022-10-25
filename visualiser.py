@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from turtle import color
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -46,17 +47,12 @@ class SimpleVisualizer(Visualiser):
             weights = layer.get_weights()
             for out_idx, _ in enumerate(weights[0]):
                 for in_idx, weight in enumerate(weights[0][out_idx]):
-                    G.add_edge(mlp_idx_range[l_idx][0] + out_idx, mlp_idx_range[l_idx + 1][0] + in_idx, weight=weight, color="green")
+                    G.add_edge(mlp_idx_range[l_idx][0] + out_idx, mlp_idx_range[l_idx + 1][0] + in_idx, color='g', weight=weight)
 
-        options = {
-            "font_size": 36,
-            "node_size": 3000,
-            "node_color": "white",
-            "edgecolors": "black",
-            "linewidths": 5,
-            "width": 5,
-        }
-        nx.draw_networkx(G, pos_nodes, **options)
+
+        colors = nx.get_edge_attributes(G,'color').values()
+        weights = nx.get_edge_attributes(G,'weight').values()
+        nx.draw_networkx(G, pos_nodes, edge_color=list(colors), width=list(weights), with_labels=True, node_color='red')
 
         # Set margins for the axes so that nodes aren't clipped
         ax = plt.gca()
