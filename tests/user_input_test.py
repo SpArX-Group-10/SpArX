@@ -1,9 +1,9 @@
 import unittest
 from keras.models import Sequential # pylint: disable=import-error
 from keras.layers import Activation, Dense, Input # pylint: disable=import-error
-from module1 import import_dataset, import_model, Framework # pylint: disable=import-error
+from user_input import import_dataset, import_model, Framework # pylint: disable=import-error
 
-class Module1Test(unittest.TestCase):
+class UserInputTest(unittest.TestCase):
     """ Tests. """
 
     # Testing approach 1: importing a model
