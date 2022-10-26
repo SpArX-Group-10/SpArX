@@ -13,9 +13,9 @@ SHRINK_TO_PERCENTAGE = 1
 shape = (4, 6, 6, 3)
 
 model = Sequential([
-    Dense(shape[0], activation='relu', input_shape=(shape[0],)),
-    Dense(shape[1], activation='relu'),
+    Dense(shape[1], activation='relu', input_shape=(shape[0],)),
     Dense(shape[2], activation='relu'),
+    Dense(shape[3], activation='relu'),
 ])
 
 
