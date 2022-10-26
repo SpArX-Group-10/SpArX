@@ -37,14 +37,14 @@ def test_import_model_keras_and_not_fnn():
 # Tests for approach 2: training a model given parameters
 def test_import_dataset():
     """ Imports raw dataset and process the data. """
-    filepath = "tests/data/test_data.csv"
+    filepath = "test/data/test_user_input_data.csv"
     data_entries, labels = import_dataset(filepath)
     assert data_entries.shape == (3, 2)
     assert labels.shape == (3,)
 
 def test_import_dataset_features():
     """ Imports raw dataset with selected features. """
-    filepath = "tests/data/test_data.csv"
+    filepath = "test/data/test_user_input_data.csv"
     data_entries, labels = import_dataset(filepath, ["name"])
     assert data_entries.shape == (3, 1)
     assert labels.shape == (3,)
