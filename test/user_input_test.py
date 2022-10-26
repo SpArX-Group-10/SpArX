@@ -16,7 +16,7 @@ def test_import_model_keras_and_fnn():
 def test_import_unsupported_model():
     """ Fails when importing unsupported models. """
     model = "Not Keras Model!"
-    
+
     with pytest.raises(ValueError):
         import_model(Framework.KERAS, model)
 
@@ -29,7 +29,7 @@ def test_import_model_keras_and_not_fnn():
         Activation('relu')
     ]
     model = Sequential(ff_layers)
-    
+
     with pytest.raises(ValueError):
         import_model(Framework.KERAS, model)
 
