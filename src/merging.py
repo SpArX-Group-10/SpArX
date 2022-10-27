@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 import numpy as np
-from ffnn import FFNN
+from src.ffnn import FFNN
 
 
 class Merger:
