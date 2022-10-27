@@ -9,7 +9,7 @@ from visualiser import SimpleVisualizer
 
 
 # shrink to a decimal percentage
-SHRINK_TO_PERCENTAGE = 1
+SHRINK_TO_PERCENTAGE = 0.5
 
 shape = (4, 6, 6, 3)
 
