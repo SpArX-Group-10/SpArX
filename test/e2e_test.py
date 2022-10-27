@@ -4,8 +4,8 @@ from keras.models import Sequential
 from keras.layers import Dense
 import tensorflow as tf
 import pytest
-from ffnn import FFNN
-from clustering import KMeansClusterer
+from src.ffnn import FFNN
+from src.clustering import KMeansClusterer
 
 @pytest.fixture(scope = "session")
 def benchmark_data() -> BenchmarkData:

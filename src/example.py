@@ -2,9 +2,9 @@ from keras.models import Sequential
 from keras.layers import Dense
 import numpy as np
 
-from ffnn import FFNN
-from clustering import KMeansClusterer
-from merging import LocalMerger
+from src.ffnn import FFNN
+from src.clustering import KMeansClusterer
+from src.merging import LocalMerger
 
 
 # shrink to a decimal percentage
