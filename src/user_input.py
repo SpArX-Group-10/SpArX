@@ -145,12 +145,11 @@ def get_ffnn_model(x_data, y_data, hidden_layers_size=[4]): # pylint: disable=da
         for hidden_size in hidden_layers_size[1:]:
             ff_layers.insert(-1, Dense(hidden_size, activation='relu'))
 
-    print(ff_layers)
     model = Sequential(ff_layers)
     model.compile(optimizer='adam',
                   loss='binary_crossentropy',
                   metrics=['accuracy', recall_m, precision_m])
-    model.summary()
+
     return model
 
 
