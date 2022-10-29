@@ -77,14 +77,14 @@ def test_import_dataset():
     """ Imports raw dataset and process the data. """
     data_entries, labels = import_dataset(USER_INPUT_DATA_FILEPATH)
     assert data_entries.shape == (3, 2)
-    assert labels.shape == (3,)
+    assert labels.shape == (3, 1)
 
 
 def test_import_dataset_features():
     """ Imports raw dataset with selected features. """
     data_entries, labels = import_dataset(USER_INPUT_DATA_FILEPATH, ["name"])
     assert data_entries.shape == (3, 1)
-    assert labels.shape == (3,)
+    assert labels.shape == (3, 1)
 
 
 # def test_train_model():

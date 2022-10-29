@@ -87,7 +87,7 @@ def import_dataset(filepath: str,
         # all rows, all columns except the last
         data_entries = raw_data.iloc[:, 1:-1]
 
-    labels = raw_data.iloc[:, -1]  # all rows, last column
+    labels = raw_data.iloc[:, -1:]  # all rows, last column
     return (data_entries, labels)
 
 
