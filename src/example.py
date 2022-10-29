@@ -2,13 +2,14 @@ from keras.models import Sequential
 from keras.layers import Dense
 import numpy as np
 
-from src.ffnn import FFNN
-from src.clustering import KMeansClusterer
-from src.merging import LocalMerger
+from ffnn import FFNN
+from clustering import KMeansClusterer
+from merging import LocalMerger
+from visualiser import SimpleVisualizer
 
 
 # shrink to a decimal percentage
-SHRINK_TO_PERCENTAGE = 1
+SHRINK_TO_PERCENTAGE = 0.5
 
 shape = (4, 6, 6, 3)
 
@@ -43,3 +44,5 @@ cluster_labels = KMeansClusterer.cluster(restored_model, SHRINK_TO_PERCENTAGE)
 merged_model = LocalMerger.merge(restored_model, cluster_labels)
 restored_model.model.summary()
 merged_model.model.summary()
+
+SimpleVisualizer.visualise(merged_model)
