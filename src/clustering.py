@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.cluster import KMeans, AgglomerativeClustering
 
 
-from src.ffnn import FFNN
+from ffnn import FFNN
 
 
 class Clusterer:
