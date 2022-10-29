@@ -1,4 +1,3 @@
-from this import d
 import pytest
 from keras.models import Sequential # pylint: disable=import-error
 from keras.layers import Activation, Dense, Input # pylint: disable=import-error
