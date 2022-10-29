@@ -149,6 +149,7 @@ def get_ffnn_model(x_data, y_data, hidden_layers_size=[4]): # pylint: disable=da
     model.compile(optimizer='adam',
                   loss='binary_crossentropy',
                   metrics=['accuracy', recall_m, precision_m])
+
     return model
 
 
