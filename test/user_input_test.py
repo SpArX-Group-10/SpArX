@@ -13,12 +13,15 @@ def test_import_model_keras_and_fnn():
     model = Sequential(ff_layers)
     assert import_model(Framework.KERAS, model) == model
 
+
 def test_import_unsupported_model():
     """ Fails when importing unsupported models. """
     model = "Not Keras Model!"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as exc_info:
         import_model(Framework.KERAS, model)
+    assert str(exc_info.value) == "Model is not a Keras model."
+
 
 def test_import_model_keras_and_not_fnn():
     """ Fails when importing a Keras model that is not FFNN. """
@@ -30,8 +33,17 @@ def test_import_model_keras_and_not_fnn():
     ]
     model = Sequential(ff_layers)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as exc_info:
         import_model(Framework.KERAS, model)
+    assert str(exc_info.value) == "Model is not a feed-forward neural network."
+
+
+def test_import_model_unsupported_framework():
+    """ Fails when importing unsupported framework. """
+    with pytest.raises(ValueError) as exc_info:
+        import_model("Not a framework", None)
+    assert str(exc_info.value) == "Unsupported framework!"
+
 
 
 # Tests for approach 2: training a model given parameters
@@ -42,12 +54,14 @@ def test_import_dataset():
     assert data_entries.shape == (3, 2)
     assert labels.shape == (3,)
 
+
 def test_import_dataset_features():
     """ Imports raw dataset with selected features. """
     filepath = "test/data/test_user_input_data.csv"
     data_entries, labels = import_dataset(filepath, ["name"])
     assert data_entries.shape == (3, 1)
     assert labels.shape == (3,)
+
 
 # def test_train_model():
 #     self.assertTrue(False and "not implemented")
