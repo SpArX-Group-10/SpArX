@@ -1,7 +1,8 @@
+from this import d
 import pytest
 from keras.models import Sequential # pylint: disable=import-error
 from keras.layers import Activation, Dense, Input # pylint: disable=import-error
-from src.user_input import import_dataset, import_model, Framework # pylint: disable=import-error
+from src.user_input import import_dataset, import_model, Framework, verify_keras_model_is_fnn # pylint: disable=import-error
 
 # Testing approach 1: importing a model
 def test_import_model_keras_and_fnn():
@@ -44,6 +45,29 @@ def test_import_model_unsupported_framework():
         import_model("Not a framework", None)
     assert str(exc_info.value) == "Unsupported framework!"
 
+
+def test_verify_model_is_fnn():
+    """ Returns true when Keras model that is FFNN. """
+    ff_layers = [
+        Dense(10, activation='relu'),
+        Dense(2, activation='softmax'),
+    ]
+    model = Sequential(ff_layers)
+
+    assert verify_keras_model_is_fnn(model)
+
+
+def test_verify_model_is_not_fnn():
+    """ Returns false when Keras model that is not FFNN. """
+    ff_layers = [
+        Input(shape=(10,)),
+        Dense(10, activation='relu'),
+        Dense(2, activation='softmax'),
+        Activation('relu')
+    ]
+    model = Sequential(ff_layers)
+
+    assert not verify_keras_model_is_fnn(model)
 
 
 # Tests for approach 2: training a model given parameters
