@@ -2,6 +2,7 @@ import pytest
 from keras.models import Sequential # pylint: disable=import-error
 from keras.layers import Activation, Dense, Input # pylint: disable=import-error
 from src.user_input import import_dataset, import_model, Framework, verify_keras_model_is_fnn # pylint: disable=import-error
+from src.user_input import train_model # pylint: disable=import-error
 
 # Testing approach 1: importing a model
 def keras_fnn_model():
@@ -87,7 +88,11 @@ def test_import_dataset_features():
 
 
 # def test_train_model():
-#     self.assertTrue(False and "not implemented")
+#     """ Train model with given parameters. """
+#     filepath = "test/data/test_user_input_data.csv"
+#     activation_functions = ["relu", "softmax"]
+#     hidden_layers_size = [2, 3]
+#     model = train_model(filepath, activation_functions, hidden_layers_size)
 
 
 # def test_recall_m():
