@@ -3,8 +3,6 @@ from typing import Optional
 from math import ceil
 import numpy as np
 from sklearn.cluster import KMeans, AgglomerativeClustering
-
-
 from ffnn import FFNN
 
 

@@ -1,4 +1,4 @@
-from test.legacy_test import legacy_benchmark_iris
+from legacy_test import legacy_benchmark_iris
 import numpy as np
 
 class BenchmarkData:

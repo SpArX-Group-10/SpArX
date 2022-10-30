@@ -46,7 +46,7 @@ from keras.callbacks import EarlyStopping
 from sklearn.cluster import KMeans, AgglomerativeClustering
 
 def get_benchmarks():
-    import test.benchmark as benchmark
+    import benchmark as benchmark
     
 
     """

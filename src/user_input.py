@@ -1,7 +1,7 @@
 from enum import Enum, auto
 
 # Model Creation
-from typing import Optional, Tuple
+from typing import Optional
 import keras # pylint: disable=import-error
 from keras import backend as kbackend # pylint: disable=import-error
 from keras.models import Sequential, Model # pylint: disable=import-error
@@ -70,7 +70,7 @@ def train_model(
 
 
 def import_dataset(filepath: str,
-                   features: Optional[list[str]] = None) -> Tuple[DataFrame,
+                   features: Optional[list[str]] = None) -> tuple[DataFrame,
                                                                   DataFrame]:
     """Import dataset from file path to pandas dataframe."""
     # Assuming the dataset is in the same directory as the module
@@ -87,11 +87,11 @@ def import_dataset(filepath: str,
         # all rows, all columns except the last
         data_entries = raw_data.iloc[:, 1:-1]
 
-    labels = raw_data.iloc[:, -1]  # all rows, last column
+    labels = raw_data.iloc[:, -1:]  # all rows, last column
     return (data_entries, labels)
 
 
-def load_preset_dataset(dataset: str) -> Tuple[DataFrame, DataFrame]:
+def load_preset_dataset(dataset: str) -> tuple[DataFrame, DataFrame]:
     """Load and plot"""
     match dataset:
         case "breast cancer":
@@ -145,12 +145,11 @@ def get_ffnn_model(x_data, y_data, hidden_layers_size=[4]): # pylint: disable=da
         for hidden_size in hidden_layers_size[1:]:
             ff_layers.insert(-1, Dense(hidden_size, activation='relu'))
 
-    print(ff_layers)
     model = Sequential(ff_layers)
     model.compile(optimizer='adam',
                   loss='binary_crossentropy',
                   metrics=['accuracy', recall_m, precision_m])
-    model.summary()
+
     return model
 
 
