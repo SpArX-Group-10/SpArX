@@ -1,7 +1,7 @@
 from enum import Enum, auto
 
 # Model Creation
-from typing import Optional, Tuple
+from typing import Optional
 import keras # pylint: disable=import-error
 from keras import backend as kbackend # pylint: disable=import-error
 from keras.models import Sequential, Model # pylint: disable=import-error
@@ -70,7 +70,7 @@ def train_model(
 
 
 def import_dataset(filepath: str,
-                   features: Optional[list[str]] = None) -> Tuple[DataFrame,
+                   features: Optional[list[str]] = None) -> tuple[DataFrame,
                                                                   DataFrame]:
     """Import dataset from file path to pandas dataframe."""
     # Assuming the dataset is in the same directory as the module
@@ -91,7 +91,7 @@ def import_dataset(filepath: str,
     return (data_entries, labels)
 
 
-def load_preset_dataset(dataset: str) -> Tuple[DataFrame, DataFrame]:
+def load_preset_dataset(dataset: str) -> tuple[DataFrame, DataFrame]:
     """Load and plot"""
     match dataset:
         case "breast cancer":

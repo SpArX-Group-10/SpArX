@@ -1,11 +1,11 @@
-from test.benchmark import BenchmarkData, create_benchmark_data
+from benchmark import BenchmarkData, create_benchmark_data
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
 import tensorflow as tf
 import pytest
-from src.ffnn import FFNN
-from src.clustering import KMeansClusterer
+from ffnn import FFNN
+from clustering import KMeansClusterer
 
 @pytest.fixture(scope = "session")
 def benchmark_data() -> BenchmarkData:

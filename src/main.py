@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 from clustering import KMeansClusterer
 from model_encoder import Framework, Model
 from ffnn import FFNN
-from user_input import load_preset_dataset, get_ffnn_model_general, net_train
+from user_input import load_preset_dataset, get_ffnn_model_general, net_train # pylint: disable=import-error
 from merging import LocalMerger
 
 
