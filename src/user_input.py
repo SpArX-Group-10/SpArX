@@ -1,7 +1,7 @@
 from enum import Enum, auto
 
 # Model Creation
-from typing import Optional, Tuple
+from typing import Optional
 import keras # pylint: disable=import-error
 from keras import backend as kbackend # pylint: disable=import-error
 from keras.models import Sequential, Model # pylint: disable=import-error
