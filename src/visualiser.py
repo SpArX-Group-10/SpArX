@@ -4,15 +4,11 @@ from typing import Optional
 import networkx as nx
 from bokeh.io import output_file, show
 from bokeh.plotting import from_networkx
-from bokeh.models import (BoxZoomTool, HoverTool, Plot, Range1d, ResetTool, PanTool, WheelZoomTool, MultiLine, Circle)
+from bokeh.models import (BoxZoomTool, HoverTool, Plot, ResetTool, PanTool, WheelZoomTool, MultiLine, Circle)
 from bokeh.palettes import Spectral4
 # from bokeh.models import Arrow, NormalHead
 
 from ffnn import FFNN
-
-FIG_WIDTH = 1920
-FIG_HEIGHT = 1080
-
 
 class Visualiser:
     """ Base visualisation class """
@@ -91,9 +87,6 @@ class SimpleVisualizer(Visualiser):
                 the network to be visualised
         """
         (G, pos_nodes) = SimpleVisualizer._generate_networkx_model(mlp, features)
-
-        WIDTH = 720
-        HEIGHT = 480
 
         ATTACK, SUPPORT = "red", "green"
         edge_colors = {}
