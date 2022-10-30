@@ -2,7 +2,7 @@ import pytest
 import keras  # pylint: disable=import-error
 from keras.models import Sequential  # pylint: disable=import-error
 from keras.layers import Dense, Input  # pylint: disable=import-error
-from src.model_encoder import Model, Framework
+from model_encoder import Model, Framework
 
 def test_get_keras_model_info():
     """Test model info encoding."""

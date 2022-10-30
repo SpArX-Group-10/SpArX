@@ -1,7 +1,7 @@
 import pytest
 from keras.models import Sequential # pylint: disable=import-error
 from keras.layers import Activation, Dense, Input # pylint: disable=import-error
-from src.user_input import import_dataset, import_model, Framework, verify_keras_model_is_fnn # pylint: disable=import-error
+from user_input import import_dataset, import_model, Framework, verify_keras_model_is_fnn # pylint: disable=import-error
 
 # Testing approach 1: importing a model
 def keras_fnn_model():
