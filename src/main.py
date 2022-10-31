@@ -74,7 +74,6 @@ def main():
 
 
 
-
     # Phase 2
 
     # forwardpass some data to do clustering
@@ -84,7 +83,7 @@ def main():
     cluster_labels = CLUSTERER.cluster(base_ffnn, SRHINK_TO_FACTOR)
 
     if MERGING_DATA_POINT:
-        base_ffnn.forward_pass(MERGING_DATA_POINT)
+        base_ffnn.forward_pass(np.array(MERGING_DATA_POINT))
 
     # merge clusters
     merged_model = MERGER.merge(base_ffnn, cluster_labels)
