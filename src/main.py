@@ -12,7 +12,7 @@ from visualiser import SimpleVisualizer
 
 
 # parameters
-PATH = "data\\iris.data"
+PATH = "data/iris.data"
 
 ACTIVATIONS = ["relu", "relu"]
 HIDDEN_LAYERS = [10, 10]
@@ -62,7 +62,7 @@ def main():
     # phase 1
 
     # setup model
-    model, x_train, _, _ = model_setup(full_path, ACTIVATIONS, HIDDEN_LAYERS)
+    model, x_train, input_names, _ = model_setup(full_path, ACTIVATIONS, HIDDEN_LAYERS)
 
     # encode model
     encoded_model = Model.transform(model, Framework.KERAS)
@@ -90,7 +90,7 @@ def main():
 
 
     # Phase 3
-    VISUALISER.visualise(merged_model)
+    VISUALISER.visualise(merged_model, input_names)
 
 
 if __name__ == "__main__":
