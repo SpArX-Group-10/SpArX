@@ -75,7 +75,7 @@ USER_INPUT_DATA_FILEPATH = "test/data/test_user_input_data.csv"
 def test_import_dataset():
     """ Imports raw dataset and process the data. """
     data_entries, labels = import_dataset(USER_INPUT_DATA_FILEPATH)
-    assert data_entries.shape == (3, 2)
+    assert data_entries.shape == (3, 3)
     assert labels.shape == (3, 1)
 
 

@@ -2,14 +2,14 @@ from enum import Enum, auto
 
 # Model Creation
 from typing import Optional
-import keras # pylint: disable=import-error
-from keras import backend as kbackend # pylint: disable=import-error
-from keras.models import Sequential, Model # pylint: disable=import-error
-from keras.layers import Dense # pylint: disable=import-error
-from sklearn.datasets import load_breast_cancer # pylint: disable=import-error
-from sklearn.model_selection import train_test_split # pylint: disable=import-error
-import pandas as pd # pylint: disable=import-error
-from pandas import DataFrame # pylint: disable=import-error
+import keras  # pylint: disable=import-error
+from keras import backend as kbackend  # pylint: disable=import-error
+from keras.models import Sequential, Model  # pylint: disable=import-error
+from keras.layers import Dense  # pylint: disable=import-error
+from sklearn.datasets import load_breast_cancer  # pylint: disable=import-error
+from sklearn.model_selection import train_test_split  # pylint: disable=import-error
+import pandas as pd  # pylint: disable=import-error
+from pandas import DataFrame  # pylint: disable=import-error
 
 # hidden layers
 HIDDEN_LAYERS = [50, 50]
@@ -17,6 +17,7 @@ HIDDEN_LAYERS = [50, 50]
 EPOCHS = 1000
 PATIENCE = 30
 BATCH_SIZE = 64
+
 
 class Framework(Enum):
     """Framework enum."""
@@ -37,6 +38,7 @@ def import_model(framework: Framework, model: any) -> keras.Model:
         case _:
             raise ValueError("Unsupported framework!")
 
+
 def verify_keras_model_is_fnn(model: keras.Model) -> bool:
     """Verify that the model is a feed-forward neural network."""
     # Check that all hidden layers are dense layers.
@@ -52,14 +54,14 @@ def verify_keras_model_is_fnn(model: keras.Model) -> bool:
 # - number of hidden neurons for each hidden layer
 # - activation functions for MLP
 
+
 def train_model(
         dataset: str,
         activation_functions: list[str],
         hidden_layers_size: list[int]):
     """ Train model."""
     x_data, y_data = import_dataset(dataset)
-    model = get_ffnn_model_general(
-        x_data, y_data, activation_functions, hidden_layers_size)
+    model = get_ffnn_model_general(x_data, y_data, activation_functions, hidden_layers_size)
 
     # divide test and train (one-hot and original format)
     # get user information for splitting data
@@ -85,7 +87,7 @@ def import_dataset(filepath: str,
         data_entries = raw_data.iloc[:, feature_indeces]
     else:
         # all rows, all columns except the last
-        data_entries = raw_data.iloc[:, 1:-1]
+        data_entries = raw_data.iloc[:, :-1]
 
     labels = raw_data.iloc[:, -1:]  # all rows, last column
     return (data_entries, labels)
@@ -96,12 +98,13 @@ def load_preset_dataset(dataset: str) -> tuple[DataFrame, DataFrame]:
     match dataset:
         case "breast cancer":
             data = load_breast_cancer()
-            x_data = pd.DataFrame(data.data) # pylint: disable=no-member
-            y_data = pd.DataFrame(data.target) # pylint: disable=no-member
+            x_data = pd.DataFrame(data.data)  # pylint: disable=no-member
+            y_data = pd.DataFrame(data.target)  # pylint: disable=no-member
             return (x_data, y_data)
 
         case _:
             raise Exception("Unsupported dataset option.")
+
 
 def recall_m(y_true, y_pred):
     """ Recall function."""
@@ -119,7 +122,9 @@ def precision_m(y_true, y_pred):
     return precision
 
 # constructing model. Structure: input, multiple hidden layers(relu), output(relu, sigmoid)
-def get_ffnn_model(x_data, y_data, hidden_layers_size=[4]): # pylint: disable=dangerous-default-value
+
+
+def get_ffnn_model(x_data, y_data, hidden_layers_size=[4]):  # pylint: disable=dangerous-default-value
     """
         BASIC MODEL for the FF-NN
     """
@@ -158,7 +163,8 @@ def get_ffnn_model_general(
         x_data: DataFrame,
         y_data: DataFrame,
         activation_funcs: list[str],
-        hidden_layers_size: list[int]) -> Model:
+        hidden_layers_size: list[int],
+        output_activaiton: Optional[str] = "sigmoid") -> Model:
     """
         BASIC MODEL for the FF-NN
     """
@@ -168,42 +174,32 @@ def get_ffnn_model_general(
     if len(hidden_layers_size) == 0:
         # No hidden layer (linear regression equivalent)
         ff_layers = [
-            Dense(
-                output_size,
-                input_shape=(
-                    input_size,
-                ),
-                activation='softmax')]
+            Dense(output_size, input_shape=(input_size,), activation=output_activaiton)]
 
     else:
         # With activation functions provided hidden layers
         ff_layers = [
-            Dense(
-                hidden_layers_size[0], input_shape=(
-                    input_size,), activation="relu"), Dense(
-                output_size, activation='sigmoid')]
+            Dense(hidden_layers_size[0], input_shape=(input_size,), activation="relu"),
+            Dense(output_size, activation=output_activaiton)
+        ]
+
         for (i, hidden_size) in enumerate(hidden_layers_size[1:]):
-            ff_layers.insert(-1, Dense(hidden_size,
-                             activation=activation_funcs[i]))
+            ff_layers.insert(-1, Dense(hidden_size, activation=activation_funcs[i]))
 
     model = Sequential(ff_layers)
-    model.compile(optimizer='adam',
-                  loss='binary_crossentropy',
-                  metrics=['accuracy', recall_m, precision_m])
-    model.summary()
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
 # train FFNN
 
 
-def net_train( # pylint: disable=too-many-arguments
+def net_train(  # pylint: disable=too-many-arguments
         model,
         x_train,
         y_train_onehot,
         x_validate,
         y_validate_onehot,
         epochs=EPOCHS):
-
     """Train the model"""
     history = model.fit(
         x_train,
