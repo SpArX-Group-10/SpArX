@@ -151,7 +151,7 @@ def test_train_model():
 
 
 def check_layers(model, activation_functions, hidden_layers_size):
-    """ Check that the model has the correct number of layers: input layer, 
+    """ Check that the model has the correct number of layers: input layer,
     hidden layers (as specified in given parameters), and output layer. """
     assert len(model.layers) == len(hidden_layers_size) + 2
 
