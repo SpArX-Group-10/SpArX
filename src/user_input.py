@@ -185,9 +185,9 @@ def get_ffnn_model_general(
                 hidden_layers_size[0], input_shape=(
                     input_size,), activation="relu"), Dense(
                 output_size, activation='sigmoid')]
-        for (i, hidden_size) in enumerate(hidden_layers_size[1:]):
+        for (i, hidden_size) in enumerate(hidden_layers_size):
             ff_layers.insert(-1, Dense(hidden_size,
-                             activation=activation_funcs[i+1]))
+                             activation=activation_funcs[i]))
 
     model = Sequential(ff_layers)
     model.compile(optimizer='adam',
