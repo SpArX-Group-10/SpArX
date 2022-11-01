@@ -182,6 +182,9 @@ def test_net_train():
     assert len(weights_before_train) == len(weights_after_train)
     for before_layer_weights, after_layer_weights in zip(weights_before_train, weights_after_train):
         assert len(before_layer_weights) == len(after_layer_weights)
+        # Note: in some cases, the weights may not change after training and the test will fail
+        # This is because the training data is too small and the model is too simple
+        # In this case, the test should be run again
         assert not (before_layer_weights == after_layer_weights).all()
 
 
