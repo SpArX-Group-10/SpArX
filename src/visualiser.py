@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from typing import Optional
+from enum import Enum
 
 import networkx as nx
 from bokeh.io import output_file, show
@@ -9,6 +10,40 @@ from bokeh.palettes import Spectral4
 # from bokeh.models import Arrow, NormalHead
 
 from ffnn import FFNN
+
+class EdgeType(Enum): 
+    ATTACK = 'red'
+    SUPPORT = 'green'
+
+class Node:
+    def __init__(self, idx: int, x: float, y: float, supports: list[Edge], attacks:list[Edge], feature_name: str):
+        self.idx = idx
+        self.x = x
+        self.y = y
+        self.feature_name = feature_name
+        self.supports = supports 
+        self.attacks= attack
+    
+
+class Edge:
+    def __init__(self, start_node: Node, end_node: Node, weight: float):
+        self.start_node = start_node
+        self.end_node = end_node
+        self.weight = weight
+        self.edge_type = EdgeType.ATTACK if weight < 0 else EdgeType.SUPPORT
+
+
+class Layer:
+    def __init__(self, nodes: list[Node]):
+        self.nodes = nodes
+        self.num_nodes = len(nodes)
+
+
+class Graph:
+    def __init__(self, layers: list[Layer]):
+        self.layers = layers
+
+        
 
 class Visualiser:
     """ Base visualisation class """
@@ -91,24 +126,21 @@ class SimpleVisualizer(Visualiser):
         ATTACK, SUPPORT = "red", "green"
         edge_colors = {}
         edge_weights = {}
-        edge_labels = {}
         edge_type = {}
         for start_node, end_node, d in G.edges(data=True):
             edge_color = ATTACK if d['weight'] < 0 else SUPPORT
             edge_colors[(start_node, end_node)] = edge_color
-            edge_weights[(start_node, end_node)] = abs(d['weight'])
-            edge_labels[(start_node, end_node)] = d['weight']
+            edge_weights[(start_node, end_node)] = d['weight']
             edge_type[(start_node, end_node)] = "Attack" if d['weight'] < 0 else "Support"
 
         nx.set_edge_attributes(G, edge_colors, "edge_color")
         nx.set_edge_attributes(G, edge_weights, "edge_weight")
         nx.set_edge_attributes(G, edge_type, "edge_type")
-        nx.set_edge_attributes(G, edge_labels, "edge_labels")
 
         graph = from_networkx(G, pos_nodes)
 
         node_hover_tool = HoverTool(tooltips=[("index", "@index")], renderers=[graph.node_renderer])
-        edge_hover_tool = HoverTool(tooltips=[("edge_labels", "@edge_labels"), ("edge_type", "@edge_type")],
+        edge_hover_tool = HoverTool(tooltips=[("edge_weight", "@edge_weight"), ("edge_type", "@edge_type")],
                                     renderers=[graph.edge_renderer], line_policy='interp')
 
 
