@@ -86,6 +86,9 @@ def import_dataset(filepath: str,
 
     if features:
         header = list(raw_data.columns[1:-1])
+        # Check if the features specified are within the dataset
+        if not set(features).issubset(set(header)):
+            raise ValueError("Feature(s) not found in dataset.")
         both = set(features).intersection(header)
         feature_indeces = [header.index(x) for x in both]
         data_entries = raw_data.iloc[:, feature_indeces]

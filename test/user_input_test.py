@@ -117,8 +117,11 @@ def test_import_dataset_nonexistent_file():
     assert str(exc_info.value) == "File not found."
 
 
-# def test_import_dataset_incorrect_features():
-#     self.assertTrue(False and "not implemented")
+def test_import_dataset_incorrect_features():
+    """ Fails when importing a dataset with incorrect features. """
+    with pytest.raises(ValueError) as exc_info:
+        import_dataset(USER_INPUT_DATA_FILEPATH, ["nonexistent_feature"])
+    assert str(exc_info.value) == "Feature(s) not found in dataset."
 
 
 def test_get_general_ffnn_model():
