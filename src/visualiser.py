@@ -1,6 +1,5 @@
 from abc import abstractmethod
 from typing import Optional
-from enum import Enum
 
 import networkx as nx
 from bokeh.io import output_file, show
@@ -10,40 +9,52 @@ from bokeh.palettes import Spectral4
 # from bokeh.models import Arrow, NormalHead
 
 from ffnn import FFNN
-
-class EdgeType(Enum): 
-    ATTACK = 'red'
-    SUPPORT = 'green'
-
-class Node:
-    def __init__(self, idx: int, x: float, y: float, supports: list[Edge], attacks:list[Edge], feature_name: str):
-        self.idx = idx
-        self.x = x
-        self.y = y
-        self.feature_name = feature_name
-        self.supports = supports 
-        self.attacks= attack
-    
-
-class Edge:
-    def __init__(self, start_node: Node, end_node: Node, weight: float):
-        self.start_node = start_node
-        self.end_node = end_node
-        self.weight = weight
-        self.edge_type = EdgeType.ATTACK if weight < 0 else EdgeType.SUPPORT
+from visualisation_graph import (Node, Edge)
 
 
-class Layer:
-    def __init__(self, nodes: list[Node]):
-        self.nodes = nodes
-        self.num_nodes = len(nodes)
 
+def generate_nodes(mlp_idx_range: list[tuple[int]]) -> tuple[dict, list[Node]]:
+    """ Generate positions and nodes for visualisation """
+    pos_nodes = {}
+    nodes = []
+    SCALING_FACTOR = 5
+    for layer, (start, end) in enumerate(mlp_idx_range):
+        num_nodes = end - start + 1
+        for i, n in enumerate(range(start, end)):
+            x_pos = layer
+            y_pos = (1 / num_nodes) * (i + 1) * SCALING_FACTOR
+            pos_nodes.update({n : (x_pos, y_pos)})
+            # TODO: feature names for input layer
+            nodes.append(Node(n, x_pos, y_pos, ""))
+    return pos_nodes, nodes
 
-class Graph:
-    def __init__(self, layers: list[Layer]):
-        self.layers = layers
+def generate_weights(mlp: FFNN, G: nx.DiGraph, mlp_idx_range: list[tuple[int]]) -> list[Edge]:
+    """ Generate weights for visualisation """
+    edges = []
+    for l_idx, layer in enumerate(mlp.model.layers):
+        weights = layer.get_weights()
+        for out_idx, _ in enumerate(weights[0]):
+            for in_idx, weight in enumerate(weights[0][out_idx]):
+                cur_layer_node = mlp_idx_range[l_idx][0] + out_idx
+                next_layer_node = mlp_idx_range[l_idx + 1][0] + in_idx
+                edges.append(Edge(cur_layer_node, next_layer_node, weight))
+                G.add_edge(cur_layer_node, next_layer_node, color='r', weight=weight)
 
-        
+    return edges
+
+def relabel_nodes(mlp_idx_range: list[tuple[int]], attr_names: list[str]) -> dict:
+    """ Relabel nodes given the feature names, layer type and index """
+    new_labels = {}
+    for layer, (start, end) in enumerate(mlp_idx_range):
+        if layer == 0:
+            new_labels.update({lnode_idx: attr_names[lnode_idx] for lnode_idx in range(len(attr_names))})
+        elif layer == len(mlp_idx_range) - 1:
+            new_labels.update({start + out_idx: f"O{out_idx}" for out_idx in range(end - start + 1)})
+        else:
+            new_labels.update({start + lnode_idx: f"C{start + lnode_idx - mlp_idx_range[0][1]}" for \
+                lnode_idx in range(end - start + 1)})
+    return new_labels
+
 
 class Visualiser:
     """ Base visualisation class """
@@ -71,7 +82,7 @@ class SimpleVisualizer(Visualiser):
         # calculate the offset in a list from start to end
         offset = 0
         for shape in mlp_shapes:
-            mlp_idx_range.append((offset, offset+shape))
+            mlp_idx_range.append((offset, offset + shape))
             offset = offset + shape
 
         if attr_names is None:
@@ -79,35 +90,16 @@ class SimpleVisualizer(Visualiser):
         else:
             assert len(attr_names) == mlp_shapes[0]
 
-
-        # 3 -> 0.99 1.98 2.97
-        # 4 -> 0.75 1.50 2.25 3
         # calculate the position of each node
-        pos_nodes = {}
-        SCALING_FACTOR = 5
-        for layer, (start, end) in enumerate(mlp_idx_range):
-            num_nodes = end - start + 1
-            pos_nodes.update({n : (layer, (1 / num_nodes) * (i + 1) * SCALING_FACTOR) \
-                             for i, n in enumerate(range(start, end))})
+        # TODO: nodes
+        pos_nodes, _ = generate_nodes(mlp_idx_range)
 
         # loop through the weights of each layer and add them to the graph
-        for l_idx, layer in enumerate(mlp.model.layers):
-            weights = layer.get_weights()
-            for out_idx, _ in enumerate(weights[0]):
-                for in_idx, weight in enumerate(weights[0][out_idx]):
-                    cur_layer_node = mlp_idx_range[l_idx][0] + out_idx
-                    next_layer_node = mlp_idx_range[l_idx + 1][0] + in_idx
-                    G.add_edge(cur_layer_node, next_layer_node, color='r', weight=weight)
+        # TODO: edges
+        _ = generate_weights(mlp, G, mlp_idx_range)
 
-        new_labels = {}
-        for layer, (start, end) in enumerate(mlp_idx_range):
-            if layer == 0:
-                new_labels.update({lnode_idx: attr_names[lnode_idx] for lnode_idx in range(len(attr_names))})
-            elif layer == len(mlp_idx_range) - 1:
-                new_labels.update({start + out_idx: f"O{out_idx}" for out_idx in range(end - start + 1)})
-            else:
-                new_labels.update({start + lnode_idx: f"C{start + lnode_idx - mlp_idx_range[0][1]}" for \
-                    lnode_idx in range(end - start + 1)})
+        # relabel the nodes with corresponding arguments
+        new_labels = relabel_nodes(mlp_idx_range, attr_names)
 
         G = nx.relabel_nodes(G, new_labels)
         new_pos_nodes = {new_labels[node]: pos for (node, pos) in pos_nodes.items()}
