@@ -157,10 +157,6 @@ def test_get_general_ffnn_model_with_no_hidden_layers():
 # def test_precision_m():
 #     self.assertTrue(False and "not implemented")
 
-# def test_get_ffnn_model():
-#     self.assertTrue(False and "not implemented")
-#     Dont need to test as not used anymore
-
 
 def test_net_train():
     """ Weights of the model are updated after training. """
