@@ -110,13 +110,11 @@ def test_import_dataset_features_multiple_features():
     assert labels.shape == (3, 1)
 
 
-# def test_import_dataset_nonexistent_file():
-#     # TODO
-#     """ Fails when importing a dataset from a nonexistent file. """
-#     with pytest.raises(FileNotFoundError) as exc_info:
-#         import_dataset("nonexistent_file.csv")
-#     assert str(exc_info.value) == "File does not exist."
-#     self.assertTrue(False and "not implemented")
+def test_import_dataset_nonexistent_file():
+    """ Fails when importing a dataset from a nonexistent file. """
+    with pytest.raises(FileNotFoundError) as exc_info:
+        import_dataset("nonexistent_file.csv")
+    assert str(exc_info.value) == "File not found."
 
 
 # def test_import_dataset_incorrect_features():

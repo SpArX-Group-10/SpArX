@@ -79,7 +79,11 @@ def import_dataset(filepath: str,
     # Assume all features are numerical
     # Assume all labels are numerical (or string - but string support is not implemented)
 
-    raw_data = pd.read_csv(filepath)
+    try:
+        raw_data = pd.read_csv(filepath)
+    except Exception as exc:
+        raise FileNotFoundError("File not found.") from exc
+
     if features:
         header = list(raw_data.columns[1:-1])
         both = set(features).intersection(header)
