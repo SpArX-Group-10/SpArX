@@ -168,15 +168,15 @@ def test_net_train():
     # Initial weights of the model before training
     model = get_ffnn_model_general(
         x_data, y_data, activation_functions, hidden_layers_size)
-    # Hidden layer weights before training
-    weights_before_train = model.get_weights()[1:-1]
+    # Hidden and output layer weights before training
+    weights_before_train = model.get_weights()[1:]
 
     # Weights of the model after training
     x_train, x_test, y_train, y_test = train_test_split(
         x_data, y_data, test_size=.2, random_state=2, shuffle=True)
     net_train(model, x_train, y_train, x_test, y_test)
-    # Hidden layer weights after training
-    weights_after_train = model.get_weights()[1:-1]
+    # Hidden and output layer weights after training
+    weights_after_train = model.get_weights()[1:]
 
     # Check that the weights have changed
     assert len(weights_before_train) == len(weights_after_train)
