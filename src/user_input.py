@@ -2,14 +2,14 @@ from enum import Enum, auto
 
 # Model Creation
 from typing import Optional
-import keras # pylint: disable=import-error
-from keras import backend as kbackend # pylint: disable=import-error
-from keras.models import Sequential, Model # pylint: disable=import-error
-from keras.layers import Dense # pylint: disable=import-error
-from sklearn.datasets import load_breast_cancer # pylint: disable=import-error
-from sklearn.model_selection import train_test_split # pylint: disable=import-error
-import pandas as pd # pylint: disable=import-error
-from pandas import DataFrame # pylint: disable=import-error
+import keras
+from keras import backend as kbackend
+from keras.models import Sequential, Model
+from keras.layers import Dense
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+import pandas as pd
+from pandas import DataFrame
 
 # hidden layers
 HIDDEN_LAYERS = [50, 50]

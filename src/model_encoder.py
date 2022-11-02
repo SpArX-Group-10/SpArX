@@ -1,6 +1,6 @@
 from enum import Enum, auto
 
-import keras # pylint: disable=import-error
+import keras
 
 class Framework(Enum):
     """Framework enum"""
