@@ -135,13 +135,13 @@ class SimpleVisualizer(Visualiser):
             start_node = graph.get_node(start_node_idx)
             end_node = graph.get_node(end_node_idx)
             end_node.transfer_attack_support(start_node.supports, d['weight'])
-   
+
         for (idx, node) in graph.nodes.items():
             supports.update({idx: ', '.join(node.get_supporting_nodes())})
             attacks.update({idx: ', '.join(node.get_attacking_nodes())})
-            
-        # print(supports) 
-        # print(attacks) 
+
+        # print(supports)
+        # print(attacks)
 
         nx.set_node_attributes(G, supports, "supports")
         nx.set_node_attributes(G, attacks, "attacks")
@@ -151,7 +151,8 @@ class SimpleVisualizer(Visualiser):
 
         graph = from_networkx(G, pos_nodes)
 
-        node_hover_tool = HoverTool(tooltips=[("index", "@index"), ("supports", "@supports"), ("attacks", "@attacks")], renderers=[graph.node_renderer])
+        node_hover_tool = HoverTool(tooltips=[("index", "@index"), ("supports", "@supports"), ("attacks", "@attacks")],\
+            renderers=[graph.node_renderer])
         edge_hover_tool = HoverTool(tooltips=[("edge_weight", "@edge_weight"), ("edge_type", "@edge_type")],
                                     renderers=[graph.edge_renderer], line_policy='interp')
 
