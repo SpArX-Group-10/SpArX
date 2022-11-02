@@ -1,13 +1,13 @@
 from kivy.factory import Factory
 from kivy.properties import ObjectProperty
 from kivy.uix.button import Button
+from kivy.uix.checkbox import CheckBox
 from kivy.uix.filechooser import FileChooserListView
-from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.stacklayout import StackLayout
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
+from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.stacklayout import StackLayout
 import os
 
 
@@ -50,18 +50,18 @@ class DatasetTabContent(StackLayout):
     def __init__(self, data_manager):
         self.data_manager = data_manager
         self.data_label = None
-        super(DatasetTabContent, self).__init__(orientation='lr-tb', padding=(10, 20))
+        super(DatasetTabContent, self).__init__(orientation='lr-tb', padding=(10, 20), spacing=20)
         self.add_widgets()
 
 
-    def add_row(self, elements, size_hint=(1, 1)):
-        row = GridLayout(rows=1, cols=len(elements), size_hint=size_hint)
+    def add_row(self, elements, size_hint=(1, None), height=20):
+        row = GridLayout(rows=1, cols=len(elements), size_hint=size_hint, height=height)
         for element in elements:
             row.add_widget(element)
         self.add_widget(row)
 
 
-    def add_browse_button(self):
+    def add_browse_elems(self):
         elems = [
             Label(text='dataset path ...',
                 size_hint=(1, None),
@@ -75,19 +75,51 @@ class DatasetTabContent(StackLayout):
             )
         ]
         self.data_label = elems[0]
-        self.add_row(elems)
+        self.add_row(elems, height=20)
+
+
+    def add_load_elems(self):
+        elems = [
+            Label(text='Have labels?',
+                size_hint=(1, None),
+                size=(200, 20)
+            ),
+            CheckBox( 
+                size_hint=(1, None),
+                size=(200, 20)
+            ),
+            Label(text="have index?",
+                size_hint=(1, None),
+                size=(200, 20)
+            ),
+            CheckBox(
+                size_hint=(1, None),
+                size=(200, 20)
+            ),
+            Button(
+                text='Load Dataset',
+                on_release=self.load_press,
+                size_hint=(None, None),
+                size=(200, 20)
+            )
+        ]
+
+        self.add_row(elems, height=20)
 
 
     def add_widgets(self):
-        # add padding
-        self.add_browse_button()
+        self.add_browse_elems()
+        self.add_load_elems()
 
 
     def browse_press(self, e):
         self._popup = Popup(title="Load file", content=LoadDialog(self), size_hint=(1, 1))
         self._popup.open()
 
+
     def dismiss_popup(self):
         self._popup.dismiss()
 
 
+    def load_press(self, e):
+        pass
