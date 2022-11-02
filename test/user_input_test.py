@@ -1,11 +1,11 @@
 import pytest
 from keras.models import Sequential # pylint: disable=import-error
 from keras.layers import Activation, Dense, Input # pylint: disable=import-error
-import numpy as np # pylint: disable=import-error
 from sklearn.model_selection import train_test_split # pylint: disable=import-error
-import tensorflow as tf # pylint: disable=import-error
+# import numpy as np
+# import tensorflow as tf
 from user_input import import_dataset, import_model, Framework, verify_keras_model_is_fnn # pylint: disable=import-error
-from user_input import train_model, recall_m, precision_m, get_ffnn_model_general, net_train # pylint: disable=import-error
+from user_input import train_model, get_ffnn_model_general, net_train #, recall_m, precision_m # pylint: disable=import-error
 
 
 # Testing approach 1: importing a model
@@ -161,7 +161,7 @@ def test_get_general_ffnn_model_with_no_hidden_layers():
 #     y_pred = tf.convert_to_tensor(y_pred, dtype=tf.float32)
 #     assert recall_m(y_true, y_pred) == 0.5
 #     self.assertTrue(False and "not implemented")
-    
+
 
 # def test_precision_m():
 #     self.assertTrue(False and "not implemented")
