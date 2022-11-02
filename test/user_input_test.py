@@ -1,11 +1,11 @@
 import pytest
-from keras.models import Sequential # pylint: disable=import-error
-from keras.layers import Activation, Dense, Input # pylint: disable=import-error
-from sklearn.model_selection import train_test_split # pylint: disable=import-error
+from keras.models import Sequential
+from keras.layers import Activation, Dense, Input
 # import numpy as np
+# from sklearn.model_selection import train_test_split
 # import tensorflow as tf
-from user_input import import_dataset, import_model, Framework, verify_keras_model_is_fnn # pylint: disable=import-error
-from user_input import train_model, get_ffnn_model_general, net_train #, recall_m, precision_m # pylint: disable=import-error
+from user_input import import_dataset, import_model, Framework, verify_keras_model_is_fnn
+from user_input import train_model, get_ffnn_model_general #, net_train, recall_m, precision_m
 
 
 # Testing approach 1: importing a model
