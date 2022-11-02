@@ -76,10 +76,19 @@ def import_dataset(filepath: str,
     # Assuming the dataset is in the same directory as the module
     # Assuming last column is the label and the rest are features
     # Assuming first row is the header
+    # Assume all features are numerical
+    # Assume all labels are numerical (or string - but string support is not implemented)
 
-    raw_data = pd.read_csv(filepath)
+    try:
+        raw_data = pd.read_csv(filepath)
+    except Exception as exc:
+        raise FileNotFoundError("File not found.") from exc
+
     if features:
         header = list(raw_data.columns[1:-1])
+        # Check if the features specified are within the dataset
+        if not set(features).issubset(set(header)):
+            raise ValueError("Feature(s) not found in dataset.")
         both = set(features).intersection(header)
         feature_indeces = [header.index(x) for x in both]
         data_entries = raw_data.iloc[:, feature_indeces]
@@ -121,7 +130,7 @@ def precision_m(y_true, y_pred):
 # constructing model. Structure: input, multiple hidden layers(relu), output(relu, sigmoid)
 def get_ffnn_model(x_data, y_data, hidden_layers_size=[4]): # pylint: disable=dangerous-default-value
     """
-        BASIC MODEL for the FF-NN
+        Legacy code for BASIC MODEL for the FF-NN
     """
     input_size = len(x_data.columns.values)
     output_size = len(y_data.columns.values)
@@ -182,7 +191,7 @@ def get_ffnn_model_general(
                 hidden_layers_size[0], input_shape=(
                     input_size,), activation="relu"), Dense(
                 output_size, activation='sigmoid')]
-        for (i, hidden_size) in enumerate(hidden_layers_size[1:]):
+        for (i, hidden_size) in enumerate(hidden_layers_size):
             ff_layers.insert(-1, Dense(hidden_size,
                              activation=activation_funcs[i]))
 
