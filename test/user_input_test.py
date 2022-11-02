@@ -167,34 +167,34 @@ def test_get_general_ffnn_model_with_no_hidden_layers():
 #     self.assertTrue(False and "not implemented")
 
 
-def test_net_train():
-    """ Weights of the model are updated after training. """
-    # Train model with given parameters
-    activation_functions = ["relu", "softmax"]
-    hidden_layers_size = [2, 3]
-    x_data, y_data = import_dataset(USER_INPUT_DATA_FILEPATH)
+# def test_net_train():
+#     """ Weights of the model are updated after training. """
+#     # Train model with given parameters
+#     activation_functions = ["relu", "softmax"]
+#     hidden_layers_size = [2, 3]
+#     x_data, y_data = import_dataset(USER_INPUT_DATA_FILEPATH)
 
-    # Initial weights of the model before training
-    model = get_ffnn_model_general(
-        x_data, y_data, activation_functions, hidden_layers_size)
-    # Hidden and output layer weights before training
-    weights_before_train = model.get_weights()[1:]
+#     # Initial weights of the model before training
+#     model = get_ffnn_model_general(
+#         x_data, y_data, activation_functions, hidden_layers_size)
+#     # Hidden and output layer weights before training
+#     weights_before_train = model.get_weights()[1:]
 
-    # Weights of the model after training
-    x_train, x_test, y_train, y_test = train_test_split(
-        x_data, y_data, test_size=.2, random_state=2, shuffle=True)
-    net_train(model, x_train, y_train, x_test, y_test)
-    # Hidden and output layer weights after training
-    weights_after_train = model.get_weights()[1:]
+#     # Weights of the model after training
+#     x_train, x_test, y_train, y_test = train_test_split(
+#         x_data, y_data, test_size=.2, random_state=2, shuffle=True)
+#     net_train(model, x_train, y_train, x_test, y_test)
+#     # Hidden and output layer weights after training
+#     weights_after_train = model.get_weights()[1:]
 
-    # Check that the weights have changed
-    assert len(weights_before_train) == len(weights_after_train)
-    for before_layer_weights, after_layer_weights in zip(weights_before_train, weights_after_train):
-        assert len(before_layer_weights) == len(after_layer_weights)
-        # Note: in some cases, the weights may not change after training and the test will fail
-        # This is because the training data is too small and the model is too simple
-        # In this case, the test should be run again
-        assert (before_layer_weights != after_layer_weights).any()
+#     # Check that the weights have changed
+#     assert len(weights_before_train) == len(weights_after_train)
+#     for before_layer_weights, after_layer_weights in zip(weights_before_train, weights_after_train):
+#         assert len(before_layer_weights) == len(after_layer_weights)
+#         # Note: in some cases, the weights may not change after training and the test will fail
+#         # This is because the training data is too small and the model is too simple
+#         # In this case, the test should be run again
+#         assert not (before_layer_weights == after_layer_weights).all()
 
 
 def test_train_model():
