@@ -6,33 +6,44 @@ from bokeh.io import output_file, show
 from bokeh.plotting import from_networkx
 from bokeh.models import (BoxZoomTool, HoverTool, Plot, ResetTool, PanTool, WheelZoomTool, MultiLine, Circle)
 from bokeh.palettes import Spectral4
-# from bokeh.models import Arrow, NormalHead
 
 from ffnn import FFNN
-from visualisation_graph import (Edge, Graph, Node)
+from visualisation_graph import (Edge, Graph, Node, Layer)
 
 
 
-def generate_nodes(mlp_idx_range: list[tuple[int]], attr_names: list[str]=None) -> tuple[dict, dict[str,Node]]:
+def generate_nodes(mlp_idx_range: list[tuple[int]], edges: list[tuple[int, int, float]], attr_names: list[str]=None) \
+                  -> tuple[dict, dict[str,Node], list[Edge], list[Layer]]:
     """ Generate positions and nodes for visualisation """
     pos_nodes = {}
     nodes = {}
+    layers = []
     SCALING_FACTOR = 5
     for layer, (start, end) in enumerate(mlp_idx_range):
         num_nodes = end - start + 1
+        layer_nodes = []
         for i, n in enumerate(range(start, end)):
             x_pos = layer
             y_pos = (1 / num_nodes) * (i + 1) * SCALING_FACTOR
             pos_nodes.update({n : (x_pos, y_pos)})
             name = attr_names.get(n)
+            new_node = None
             if layer == 0:
-                nodes.update({name: Node(n, x_pos, y_pos, name, {name: 1.0})})
+                new_node = Node(n, x_pos, y_pos, name, {name: 1.0})
             else:
-                nodes.update({name: Node(n, x_pos, y_pos, name)})
+                new_node = Node(n, x_pos, y_pos, name)
+            nodes.update({name: new_node})
+            layer_nodes.append(new_node)
+            edges = [(new_node, end, w) if start == n else (start, end, w) for start, end, w in edges]
+            edges = [(start, new_node, w) if end == n else (start, end, w)for start, end, w in edges]
+        layers.append(Layer(layer_nodes))
 
-    return pos_nodes, nodes
+    vis_graph_edges = [Edge(start, end, w) for start, end, w in edges]
+    for edge in vis_graph_edges:
+        print(f"edge starting at {edge.start_node.feature_name} and ending at {edge.end_node.feature_name}")
+    return pos_nodes, nodes, vis_graph_edges, layers
 
-def generate_weights(mlp: FFNN, G: nx.DiGraph, mlp_idx_range: list[tuple[int]]) -> list[Edge]:
+def generate_weights(mlp: FFNN, G: nx.DiGraph, mlp_idx_range: list[tuple[int]]) -> list[tuple[int, int, float]]:
     """ Generate weights for visualisation """
     edges = []
     for l_idx, layer in enumerate(mlp.model.layers):
@@ -41,7 +52,7 @@ def generate_weights(mlp: FFNN, G: nx.DiGraph, mlp_idx_range: list[tuple[int]]) 
             for in_idx, weight in enumerate(weights[0][out_idx]):
                 cur_layer_node = mlp_idx_range[l_idx][0] + out_idx
                 next_layer_node = mlp_idx_range[l_idx + 1][0] + in_idx
-                edges.append(Edge(cur_layer_node, next_layer_node, weight))
+                edges.append((cur_layer_node, next_layer_node, weight))
                 G.add_edge(cur_layer_node, next_layer_node, color='r', weight=weight)
 
     return edges
@@ -77,7 +88,8 @@ class Visualiser:
 class SimpleVisualizer(Visualiser):
     """ Generates a basic representation of the clustered model using networkx """
     @staticmethod
-    def _generate_networkx_model(mlp: FFNN, attr_names: list[str]=None) -> tuple[nx.DiGraph, Graph, dict]:
+    def _generate_networkx_model(mlp: FFNN, attr_names: list[str]=None) \
+                                -> tuple[nx.DiGraph, Graph, dict, list[Layer]]:
         G = nx.DiGraph()
 
         mlp_shapes = mlp.get_shape()
@@ -101,25 +113,24 @@ class SimpleVisualizer(Visualiser):
         # relabel the nodes with corresponding arguments
         new_labels = relabel_nodes(mlp_idx_range, attr_names)
 
-        # calculate the position of each node
-        # TODO: nodes
-        pos_nodes, nodes = generate_nodes(mlp_idx_range, new_labels)
+        # calculate the position of each node, along with the custom object edges and layers
+        pos_nodes, nodes, vis_graph_edges, layers = generate_nodes(mlp_idx_range, edges, new_labels)
 
-        graph = Graph(nodes, edges)
+        graph = Graph(nodes, vis_graph_edges)
 
         G = nx.relabel_nodes(G, new_labels)
         new_pos_nodes = {new_labels[node]: pos for (node, pos) in pos_nodes.items()}
 
-        return (G, graph, new_pos_nodes)
+        return (G, graph, new_pos_nodes, layers)
 
     @staticmethod
     def visualise(mlp: FFNN, features: Optional[list[str]] = None) -> None:
-        """ Generate interactive visualisation using networkx and bokeh.
+        """ Generate interactisve visualisation using networkx and bokeh.
         :params
             mlp: FFNN
                 the network to be visualised
         """
-        (G, graph, pos_nodes) = SimpleVisualizer._generate_networkx_model(mlp, features)
+        (G, graph, pos_nodes, _) = SimpleVisualizer._generate_networkx_model(mlp, features)
 
         ATTACK, SUPPORT = "red", "green"
         edge_colors = {}
@@ -127,9 +138,9 @@ class SimpleVisualizer(Visualiser):
         edge_type = {}
         supports = {}
         attacks = {}
+        print(G.edges())
         for start_node_idx, end_node_idx, d in G.edges(data=True):
-            edge_color = ATTACK if d['weight'] < 0 else SUPPORT
-            edge_colors[(start_node_idx, end_node_idx)] = edge_color
+            edge_colors[(start_node_idx, end_node_idx)] = ATTACK if d['weight'] < 0 else SUPPORT
             edge_weights[(start_node_idx, end_node_idx)] = d['weight']
             edge_type[(start_node_idx, end_node_idx)] = "Attack" if d['weight'] < 0 else "Support"
             start_node = graph.get_node(start_node_idx)
@@ -137,11 +148,10 @@ class SimpleVisualizer(Visualiser):
             end_node.transfer_attack_support(start_node.supports, d['weight'])
 
         for (idx, node) in graph.nodes.items():
+            print(f"support nodes for node {idx} are {node.get_supporting_nodes()}")
             supports.update({idx: ', '.join(node.get_supporting_nodes())})
             attacks.update({idx: ', '.join(node.get_attacking_nodes())})
 
-        # print(supports)
-        # print(attacks)
 
         nx.set_node_attributes(G, supports, "supports")
         nx.set_node_attributes(G, attacks, "attacks")
@@ -160,18 +170,6 @@ class SimpleVisualizer(Visualiser):
         # plot = Plot(width=WIDTH, height=HEIGHT, x_range=Range1d(-1.1, 1.1),
         #             y_range=Range1d(-1.1, 1.1), sizing_mode='scale_both')
         plot = Plot(sizing_mode='scale_both')
-
-        # add arrows
-        # OFFSET_VAL = 0.05
-        # for start_node, end_node, d in G.edges(data=True):
-        #     arrow = Arrow(end=NormalHead(line_color='black', size=10),
-        #           y_start=pos_nodes[start_node][1],
-        #           x_start=pos_nodes[start_node][0],
-        #           x_end=pos_nodes[end_node][0] - OFFSET_VAL,
-        #           y_end=pos_nodes[end_node][1] + OFFSET_VAL if pos_nodes[start_node][1] > pos_nodes[end_node][1] \
-        #                                             else pos_nodes[end_node][1] - OFFSET_VAL,
-        #           line_width=0)
-        #     plot.add_layout(arrow)
 
 
         plot.add_tools(node_hover_tool, edge_hover_tool, BoxZoomTool(), ResetTool(), PanTool(), WheelZoomTool())

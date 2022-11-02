@@ -7,7 +7,7 @@ class EdgeType(Enum):
 
 class Node:
     """The building block of a neural network."""
-    def __init__(self, idx: int, x: float, y: float, feature_name: str, supports:dict[str, float]={}): # pylint: disable=dangerous-default-value
+    def __init__(self, idx: int, x: float, y: float, feature_name, supports:dict[str, float]={}): # pylint: disable=dangerous-default-value
         """Initialize node."""
         self.idx = idx
         self.x = x
@@ -21,22 +21,22 @@ class Node:
 
     def transfer_attack_support(self, supports: dict[str, float], weight: float):
         """Propagate attacks and supports."""
-        for n,v in supports.items():
-            self.supports.update({n: self.supports.get(n, 0.0)+v*weight})
+        for n, v in supports.items():
+            self.supports.update({n: self.supports.get(n, 0.0) + v * weight})
 
     def get_supporting_nodes(self):
         """Get support nodes."""
         res = set()
-        for n,v in self.supports.items():
-            if v>0:
+        for n, v in self.supports.items():
+            if v > 0:
                 res.add(n)
         return res
 
     def get_attacking_nodes(self):
         """Get attack nodes."""
         res = set()
-        for n,v in self.supports.items():
-            if v<0:
+        for n, v in self.supports.items():
+            if v < 0:
                 res.add(n)
         return res
 
@@ -50,11 +50,11 @@ class Edge:
         self.edge_type = EdgeType.ATTACK if weight < 0 else EdgeType.SUPPORT
 
 
-# class Layer:
-#     """Contains a series of nodes in the neural network."""
-#     def __init__(self, nodes: list[Node]):
-#         self.nodes = nodes
-#         self.num_nodes = len(nodes)
+class Layer:
+    """Contains a series of nodes in the neural network."""
+    def __init__(self, nodes: list[Node]):
+        self.nodes = nodes
+        self.num_nodes = len(nodes)
 
 
 class Graph:
