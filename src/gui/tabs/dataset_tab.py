@@ -61,9 +61,7 @@ class DatasetTabContent(StackLayout):
 
         self._popup = Popup(title="Load file", content=LoadDialog(self), size_hint=(1, 1))
 
-        super(DatasetTabContent, self).__init__(
-            orientation="lr-tb", padding=(10, 20), spacing=20
-        )
+        super().__init__(orientation="lr-tb", padding=(10, 20), spacing=20)
         self.add_widgets()
 
     def add_row(self, elements, size_hint=(1, None), height=20):
@@ -119,4 +117,3 @@ class DatasetTabContent(StackLayout):
 
     def load_press(self, e):
         """Loads the dataset"""
-        pass
