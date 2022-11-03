@@ -78,14 +78,13 @@ def test_verify_model_is_not_fnn():
 USER_INPUT_DATA_FILEPATH = "test/data/test_user_input_data.csv"
 
 def check_layers(model, activation_functions, hidden_layers_size):
-    """ Check that the model has the correct number of layers: input layer,
-    hidden layers (as specified in given parameters), and output layer. """
-    assert len(model.layers) == len(hidden_layers_size) + 2
+    """ Check that the model has the correct number of layers: input layer, hidden layers, and output layer. """
+    assert len(model.layers) == len(hidden_layers_size) + 1
 
     # Check that each hidden layer has the activation function and number of neurons as specified in the parameters
     for i, (hidden_layer_size, activation_func) in enumerate(zip(hidden_layers_size, activation_functions)):
-        assert model.layers[i + 1].get_config()["units"] == hidden_layer_size
-        assert model.layers[i + 1].get_config()["activation"] == activation_func
+        assert model.layers[i].get_config()["units"] == hidden_layer_size
+        assert model.layers[i].get_config()["activation"] == activation_func
 
 
 def test_import_dataset():
@@ -132,8 +131,7 @@ def test_get_general_ffnn_model():
     activation_functions = ["relu", "softmax"]
     hidden_layers_size = [2, 3]
     x_data, y_data = import_dataset(USER_INPUT_DATA_FILEPATH)
-    model = get_ffnn_model_general(
-        x_data, y_data, activation_functions, hidden_layers_size)
+    model = get_ffnn_model_general(x_data, y_data, activation_functions, hidden_layers_size)
 
     # Check that each layer has the activation function and number of neurons as specified in the parameters
     check_layers(model, activation_functions, hidden_layers_size)
@@ -145,12 +143,11 @@ def test_get_general_ffnn_model_with_no_hidden_layers():
     activation_functions = []
     hidden_layers_size = []
     x_data, y_data = import_dataset(USER_INPUT_DATA_FILEPATH)
-    model = get_ffnn_model_general(
-        x_data, y_data, activation_functions, hidden_layers_size)
+    model = get_ffnn_model_general(x_data, y_data, activation_functions, hidden_layers_size)
 
     # Model created when no hidden layers are specified
     assert len(model.layers) == 1
-    assert model.layers[0].get_config()["activation"] == "softmax"
+    assert model.layers[0].get_config()["activation"] == "sigmoid"
 
 
 # def test_recall_m():
