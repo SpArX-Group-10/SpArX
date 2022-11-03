@@ -15,7 +15,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 
 
-EPOCHS = 1000
+EPOCHS = 10
 PATIENCE = 100
 BATCH_SIZE = 64
 

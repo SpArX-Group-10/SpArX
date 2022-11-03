@@ -206,7 +206,7 @@ def get_benchmarks():
     forge_gen = False
 
     # Loads the model if already exists and trained, if not train it and save it
-    history = net_train(model, X_train, y_onehot_train, X_test, y_onehot_test)
+    #history = net_train(model, X_train, y_onehot_train, X_test, y_onehot_test)
     score = model.evaluate(X_test, y_onehot_test)
 
 
@@ -411,5 +411,5 @@ def get_benchmarks():
 
     structural_fidelity /= (number_of_nodes * X_test.values.shape[0])
     
-    return benchmark.BenchmarkData(clustering_labels)
+    return benchmark.BenchmarkData(clustering_labels, (weights, biases, input_size, output_size))
 
