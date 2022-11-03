@@ -6,5 +6,5 @@ class ModelTabContent(GridLayout):
     """Model tab content."""
     def __init__(self, data_manager):
         self.data_manager = data_manager
-        super(ModelTabContent, self).__init__()
+        super().__init__()
         self.add_widget(Label(text='Model Tab Content'))
