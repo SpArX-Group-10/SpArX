@@ -9,3 +9,4 @@ results
 /Lib
 /Scripts
 pyvenv.cfg
+.idea/*
