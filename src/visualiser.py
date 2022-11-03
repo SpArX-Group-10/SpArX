@@ -67,14 +67,18 @@ def relabel_nodes(mlp_idx_range: list[tuple[int]], attr_names: list[str]) -> dic
                 lnode_idx in range(end - start + 1)})
     return new_labels
 
-def get_attack_support_by_node(graph: Graph) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+def get_attack_support_by_node(graph: Graph, propagate: bool=True) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
     """Constructs dictionary mapping from nodes labels to attack and support labels"""
     supports = {}
     attacks = {}
     for edge in graph.edges:
         start = edge.start_node
         end = edge.end_node
-        end.add_incoming_node(start.feature_name, edge.weight)
+        # if true propagate attacks and supports among layers
+        if propagate:
+            end.transfer_attack_support(start.incoming, edge.weight)
+        else:
+            end.add_incoming_node(start.feature_name, edge.weight)
         print(f"node {end} has incoming nodes {end.incoming}")
 
     for label, node in graph.nodes.items():

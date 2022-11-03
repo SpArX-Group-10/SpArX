@@ -25,10 +25,10 @@ class Node:
         """Rename feature."""
         self.feature_name = name
 
-    # def transfer_attack_support(self, supports: dict[str, float], weight: float):
-    #     """Propagate attacks and supports."""
-    #     for n, v in supports.items():
-    #         self.incoming.update({n: self.incoming.get(n, 0.0) + v * weight})
+    def transfer_attack_support(self, supports: dict[str, float], weight: float):
+        """Propagate attacks and supports."""
+        for n, v in supports.items():
+            self.incoming.update({n: self.incoming.get(n, 0.0) + v * weight})
 
     def get_support_attack_nodes(self) -> tuple[list[str], list[str]]:
         """Get support nodes."""
