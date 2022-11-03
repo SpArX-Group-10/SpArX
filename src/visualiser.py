@@ -10,10 +10,8 @@ from bokeh.palettes import Spectral4
 from ffnn import FFNN
 from visualisation_graph import (Edge, Graph, Node, Layer)
 
-
-
 def generate_nodes(mlp_idx_range: list[tuple[int]], edges: list[tuple[int, int, float]], attr_names: list[str]=None) \
-                  -> tuple[dict, dict[str,Node], list[Edge], list[Layer]]:
+                  -> tuple[dict, dict[str, Node], list[Edge], list[Layer]]:
     """ Generate positions and nodes for visualisation """
     pos_nodes = {}
     nodes = {}
@@ -39,8 +37,7 @@ def generate_nodes(mlp_idx_range: list[tuple[int]], edges: list[tuple[int, int, 
         layers.append(Layer(layer_nodes))
 
     vis_graph_edges = [Edge(start, end, w) for start, end, w in edges]
-    for edge in vis_graph_edges:
-        print(f"edge starting at {edge.start_node.feature_name} and ending at {edge.end_node.feature_name}")
+
     return pos_nodes, nodes, vis_graph_edges, layers
 
 def generate_weights(mlp: FFNN, G: nx.DiGraph, mlp_idx_range: list[tuple[int]]) -> list[tuple[int, int, float]]:
@@ -70,6 +67,22 @@ def relabel_nodes(mlp_idx_range: list[tuple[int]], attr_names: list[str]) -> dic
                 lnode_idx in range(end - start + 1)})
     return new_labels
 
+def get_attack_support_by_node(graph: Graph) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+    """Constructs dictionary mapping from nodes labels to attack and support labels"""
+    supports = {}
+    attacks = {}
+    for edge in graph.edges:
+        start = edge.start_node
+        end = edge.end_node
+        end.add_incoming_node(start.feature_name, edge.weight)
+        print(f"node {end} has incoming nodes {end.incoming}")
+
+    for label, node in graph.nodes.items():
+        curr_support, curr_attack = node.get_support_attack_nodes()
+        supports.update({label: curr_support})
+        attacks.update({label: curr_attack})
+    return supports, attacks
+
 
 class Visualiser:
     """ Base visualisation class """
@@ -83,7 +96,6 @@ class Visualiser:
                 the network to be visualised
         """
         raise NotImplementedError
-
 
 class SimpleVisualizer(Visualiser):
     """ Generates a basic representation of the clustered model using networkx """
@@ -130,27 +142,22 @@ class SimpleVisualizer(Visualiser):
             mlp: FFNN
                 the network to be visualised
         """
+        # TODO: add layer as return value if needed
         (G, graph, pos_nodes, _) = SimpleVisualizer._generate_networkx_model(mlp, features)
 
         ATTACK, SUPPORT = "red", "green"
         edge_colors = {}
         edge_weights = {}
         edge_type = {}
-        supports = {}
-        attacks = {}
-        print(G.edges())
         for start_node_idx, end_node_idx, d in G.edges(data=True):
             edge_colors[(start_node_idx, end_node_idx)] = ATTACK if d['weight'] < 0 else SUPPORT
             edge_weights[(start_node_idx, end_node_idx)] = d['weight']
             edge_type[(start_node_idx, end_node_idx)] = "Attack" if d['weight'] < 0 else "Support"
-            start_node = graph.get_node(start_node_idx)
-            end_node = graph.get_node(end_node_idx)
-            end_node.transfer_attack_support(start_node.supports, d['weight'])
 
-        for (idx, node) in graph.nodes.items():
-            print(f"support nodes for node {idx} are {node.get_supporting_nodes()}")
-            supports.update({idx: ', '.join(node.get_supporting_nodes())})
-            attacks.update({idx: ', '.join(node.get_attacking_nodes())})
+        supports, attacks = get_attack_support_by_node(graph)
+
+        supports = {label: ', '.join(supporting_nodes) for (label, supporting_nodes) in supports.items()}
+        attacks = {label: ', '.join(attacking_nodes) for (label, attacking_nodes) in attacks.items()}
 
 
         nx.set_node_attributes(G, supports, "supports")
