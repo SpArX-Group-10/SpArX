@@ -1,5 +1,5 @@
 from enum import Enum
-
+import jsonpickle
 
 class EdgeType(Enum):
     """Specifies the edge type after clustering."""
@@ -44,6 +44,10 @@ class Node:
     def __repr__(self) -> str:
         return self.feature_name
 
+    def toJSON(self):
+        """This method serializes a Python Object to JSON"""
+        return jsonpickle.encode(self)
+
 
 class Edge:
     """Connects one node to the other between two adjacent layers."""
@@ -57,6 +61,10 @@ class Edge:
     def __repr__(self) -> str:
         return f"Edge from {self.start_node} to {self.end_node} with weight {self.weight:.2f} \n"
 
+    def toJSON(self):
+        """This method serializes a Python Object to JSON"""
+        return jsonpickle.encode(self)
+
 
 class Layer:
     """Contains a series of nodes in the neural network."""
@@ -64,6 +72,10 @@ class Layer:
     def __init__(self, nodes: list[Node]):
         self.nodes = nodes
         self.num_nodes = len(nodes)
+
+    def toJSON(self):
+        """This method serializes a Python Object to JSON"""
+        return jsonpickle.encode(self)
 
 
 class Graph:
@@ -77,3 +89,7 @@ class Graph:
     def get_node(self, name: str) -> Node:
         """Get node."""
         return self.nodes.get(name)
+
+    def toJSON(self):
+        """This method serializes a Python Object to JSON"""
+        return jsonpickle.encode(self)

@@ -4,7 +4,8 @@ from typing import Optional
 import networkx as nx
 from bokeh.io import output_file, show
 from bokeh.plotting import from_networkx
-from bokeh.models import (BoxZoomTool, HoverTool, Plot, ResetTool, PanTool, WheelZoomTool, MultiLine, Circle)
+from bokeh.models import (BoxZoomTool, HoverTool, Plot, ResetTool, PanTool, \
+                            WheelZoomTool, MultiLine, Circle, TapTool, CustomJS)
 from bokeh.palettes import Spectral4
 
 from ffnn import FFNN
@@ -141,13 +142,18 @@ class SimpleVisualizer(Visualiser):
 
     @staticmethod
     def visualise(mlp: FFNN, features: Optional[list[str]] = None) -> None:
-        """ Generate interactisve visualisation using networkx and bokeh.
+        """ Generate interactive visualisation using networkx and bokeh.
         :params
             mlp: FFNN
                 the network to be visualised
         """
         # TODO: add layer as return value if needed
-        (G, graph, pos_nodes, _) = SimpleVisualizer._generate_networkx_model(mlp, features)
+        (G, custom_graph, pos_nodes, custom_graph_layers) = SimpleVisualizer._generate_networkx_model(mlp, features)
+
+
+        num_nodes = len(custom_graph.nodes)
+        last_layer_nodes = len(custom_graph_layers[len(custom_graph_layers) - 1].nodes)
+        transparency = [0] * (num_nodes - last_layer_nodes) + [1] * last_layer_nodes
 
         ATTACK, SUPPORT = "red", "green"
         edge_colors = {}
@@ -158,7 +164,7 @@ class SimpleVisualizer(Visualiser):
             edge_weights[(start_node_idx, end_node_idx)] = d['weight']
             edge_type[(start_node_idx, end_node_idx)] = "Attack" if d['weight'] < 0 else "Support"
 
-        supports, attacks = get_attack_support_by_node(graph)
+        supports, attacks = get_attack_support_by_node(custom_graph)
 
         supports = {label: ', '.join(supporting_nodes) for (label, supporting_nodes) in supports.items()}
         attacks = {label: ', '.join(attacking_nodes) for (label, attacking_nodes) in attacks.items()}
@@ -172,21 +178,32 @@ class SimpleVisualizer(Visualiser):
 
         graph = from_networkx(G, pos_nodes)
 
+        tap_tool_callback = CustomJS(args=dict(custom_graph=custom_graph.toJSON()), code = """
+            console.log("inside tap tool callback")
+            console.log(render_graph)
+            const graph = JSON.parse(custom_graph);
+            nodes = graph["nodes"]
+            edges = graph["edges"]
+            console.log(graph["nodes"])
+            console.log(graph["edges"])
+        """)
+
         node_hover_tool = HoverTool(tooltips=[("index", "@index"), ("supports", "@supports"), ("attacks", "@attacks")],\
             renderers=[graph.node_renderer])
         edge_hover_tool = HoverTool(tooltips=[("edge_weight", "@edge_weight"), ("edge_type", "@edge_type")],
                                     renderers=[graph.edge_renderer], line_policy='interp')
+        custom_tap_tool = TapTool(callback = tap_tool_callback, behavior='inspect')
 
-
-        # plot = Plot(width=WIDTH, height=HEIGHT, x_range=Range1d(-1.1, 1.1),
-        #             y_range=Range1d(-1.1, 1.1), sizing_mode='scale_both')
         plot = Plot(sizing_mode='scale_both')
 
+        plot.add_tools(node_hover_tool, edge_hover_tool, custom_tap_tool, \
+                        BoxZoomTool(), ResetTool(), PanTool(), WheelZoomTool())
 
-        plot.add_tools(node_hover_tool, edge_hover_tool, BoxZoomTool(), ResetTool(), PanTool(), WheelZoomTool())
+        graph.node_renderer.data_source.data['transparency'] = transparency
+        graph.edge_renderer.glyph = MultiLine(line_color="edge_color", line_alpha=0, line_width="edge_weight")
+        graph.node_renderer.glyph = Circle(size=35, fill_color=Spectral4[0], \
+                                            fill_alpha='transparency', line_alpha='transparency')
 
-        graph.edge_renderer.glyph = MultiLine(line_color="edge_color", line_alpha=0.8, line_width="edge_weight")
-        graph.node_renderer.glyph = Circle(size=35, fill_color=Spectral4[0])
         plot.renderers.append(graph)
 
         output_file("networkx_graph.html")
