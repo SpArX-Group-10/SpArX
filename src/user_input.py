@@ -21,6 +21,7 @@ BATCH_SIZE = 64
 
 class Framework(Enum):
     """Framework enum."""
+
     KERAS = auto()
 
 
@@ -48,6 +49,7 @@ def verify_keras_model_is_fnn(model: keras.Model) -> bool:
     # Verify that the model is a sequential model.
     return isinstance(model, keras.Sequential)
 
+
 # Approach 2: we train it using
 # - Dataset
 # - number of layers for MLP
@@ -56,19 +58,18 @@ def verify_keras_model_is_fnn(model: keras.Model) -> bool:
 
 
 def train_model(
-        dataset: str,
-        activation_functions: list[str],
-        hidden_layers_size: list[int],
-        epochs: int = 10,
+    dataset: str,
+    activation_functions: list[str],
+    hidden_layers_size: list[int],
+    epochs: int = 10,
 ) -> keras.Model:
-    """ Train model."""
+    """Train model."""
     x_data, y_data = import_dataset(dataset)
     model = get_ffnn_model_general(x_data, y_data, activation_functions, hidden_layers_size)
 
     # divide test and train (one-hot and original format)
     # get user information for splitting data
-    x_train, x_test, y_train, y_test = train_test_split(
-        x_data, y_data, test_size=.2, random_state=2, shuffle=True)
+    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.2, random_state=2, shuffle=True)
     net_train(model, x_train, y_train, x_test, y_test, epochs=epochs)
     return model
 
@@ -123,7 +124,7 @@ def load_preset_dataset(dataset: str) -> tuple[DataFrame, DataFrame]:
 
 
 def recall_m(y_true, y_pred):
-    """ Recall function."""
+    """Recall function."""
     true_positives = kbackend.sum(kbackend.round(kbackend.clip(y_true * y_pred, 0, 1)))
     possible_positives = kbackend.sum(kbackend.round(kbackend.clip(y_true, 0, 1)))
     recall = true_positives / (possible_positives + kbackend.epsilon())
@@ -131,58 +132,51 @@ def recall_m(y_true, y_pred):
 
 
 def precision_m(y_true, y_pred):
-    """ Precision function."""
+    """Precision function."""
     true_positives = kbackend.sum(kbackend.round(kbackend.clip(y_true * y_pred, 0, 1)))
     predicted_positives = kbackend.sum(kbackend.round(kbackend.clip(y_pred, 0, 1)))
     precision = true_positives / (predicted_positives + kbackend.epsilon())
     return precision
+
 
 # constructing model. Structure: input, multiple hidden layers(relu), output(relu, sigmoid)
 
 
 def get_ffnn_model(x_data, y_data, hidden_layers_size=[4]):  # pylint: disable=dangerous-default-value
     """
-        Legacy code for BASIC MODEL for the FF-NN
+    Legacy code for BASIC MODEL for the FF-NN
     """
     input_size = len(x_data.columns.values)
     output_size = len(y_data.columns.values)
 
     if len(hidden_layers_size) == 0:
         # No hidden layer (linear regression equivalent)
-        ff_layers = [
-            Dense(
-                output_size,
-                input_shape=(
-                    input_size,
-                ),
-                activation='softmax')]
+        ff_layers = [Dense(output_size, input_shape=(input_size,), activation="softmax")]
     else:
         # With sigmoid hidden layers
         ff_layers = [
-            Dense(
-                hidden_layers_size[0], input_shape=(
-                    input_size,), activation="relu"), Dense(
-                output_size, activation='sigmoid')]
+            Dense(hidden_layers_size[0], input_shape=(input_size,), activation="relu"),
+            Dense(output_size, activation="sigmoid"),
+        ]
         for hidden_size in hidden_layers_size[1:]:
-            ff_layers.insert(-1, Dense(hidden_size, activation='relu'))
+            ff_layers.insert(-1, Dense(hidden_size, activation="relu"))
 
     model = Sequential(ff_layers)
-    model.compile(optimizer='adam',
-                  loss='binary_crossentropy',
-                  metrics=['accuracy', recall_m, precision_m])
+    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy", recall_m, precision_m])
 
     return model
 
 
 # constructing model. Structure: input, multiple hidden layers, output
 def get_ffnn_model_general(
-        x_data: DataFrame,
-        y_data: DataFrame,
-        activation_funcs: list[str],
-        hidden_layers_size: list[int],
-        output_activaiton: Optional[str] = "sigmoid") -> Model:
+    x_data: DataFrame,
+    y_data: DataFrame,
+    activation_funcs: list[str],
+    hidden_layers_size: list[int],
+    output_activaiton: Optional[str] = "sigmoid",
+) -> Model:
     """
-        BASIC MODEL for the FF-NN
+    BASIC MODEL for the FF-NN
     """
     input_size = len(x_data.columns.values)
     output_size = len(y_data.columns.values)
@@ -193,29 +187,22 @@ def get_ffnn_model_general(
 
     else:
         # With activation functions provided hidden layers
-        ff_layers = [
-            Input(shape=(input_size,)),
-            Dense(output_size, activation=output_activaiton)
-        ]
+        ff_layers = [Input(shape=(input_size,)), Dense(output_size, activation=output_activaiton)]
 
         for (i, hidden_size) in enumerate(hidden_layers_size):
             ff_layers.insert(-1, Dense(hidden_size, activation=activation_funcs[i]))
 
-
     model = Sequential(ff_layers)
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
     return model
+
 
 # train FFNN
 
 
 def net_train(  # pylint: disable=too-many-arguments
-        model,
-        x_train,
-        y_train_onehot,
-        x_validate,
-        y_validate_onehot,
-        epochs=EPOCHS):
+    model, x_train, y_train_onehot, x_validate, y_validate_onehot, epochs=EPOCHS
+):
     """Train the model"""
     history = model.fit(
         x_train,
@@ -223,8 +210,7 @@ def net_train(  # pylint: disable=too-many-arguments
         verbose=2,
         epochs=epochs,
         batch_size=BATCH_SIZE,
-        validation_data=(
-            x_validate,
-            y_validate_onehot))
+        validation_data=(x_validate, y_validate_onehot),
+    )
 
     return history
