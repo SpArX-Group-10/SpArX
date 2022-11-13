@@ -28,9 +28,9 @@ def generate_nodes(mlp_idx_range: list[tuple[int]], edges: list[tuple[int, int, 
             name = attr_names.get(n)
             new_node = None
             if layer == 0:
-                new_node = Node(n, x_pos, y_pos, name, {name: 1.0})
+                new_node = Node(n, x_pos, y_pos, name, i+1, {name: 1.0})
             else:
-                new_node = Node(n, x_pos, y_pos, name)
+                new_node = Node(n, x_pos, y_pos, name, i+1)
             nodes.update({name: new_node})
             layer_nodes.append(new_node)
             edges = [(new_node, end, w) if start == n else (start, end, w) for start, end, w in edges]
@@ -68,7 +68,8 @@ def relabel_nodes(mlp_idx_range: list[tuple[int]], attr_names: list[str]) -> dic
                 lnode_idx in range(end - start + 1)})
     return new_labels
 
-def get_attack_support_by_node(graph: Graph, propagate: bool=True) -> tuple[dict[str, list[str]], dict[str, list[str]]]:
+def get_attack_support_by_node(graph: Graph, propagate: bool=False) -> tuple[dict[str, list[str]],
+                                                                             dict[str, list[str]]]:
     """Constructs dictionary mapping from nodes labels to attack and support labels"""
     supports = {}
     attacks = {}
@@ -79,7 +80,7 @@ def get_attack_support_by_node(graph: Graph, propagate: bool=True) -> tuple[dict
         if propagate:
             end.transfer_attack_support(start.incoming, edge.weight)
         else:
-            end.add_incoming_node(start.feature_name, edge.weight)
+            end.add_incoming_node(start.label, edge.weight)
         print(f"node {end} has incoming nodes {end.incoming}")
 
     for label, node in graph.nodes.items():
@@ -124,7 +125,6 @@ class SimpleVisualizer(Visualiser):
             assert len(attr_names) == mlp_shapes[0]
 
         # loop through the weights of each layer and add them to the graph
-        # TODO: edges
         edges = generate_weights(mlp, G, mlp_idx_range)
 
         # relabel the nodes with corresponding arguments
@@ -170,13 +170,15 @@ class SimpleVisualizer(Visualiser):
         attacks = {label: ', '.join(attacking_nodes) for (label, attacking_nodes) in attacks.items()}
 
 
-        nx.set_node_attributes(G, supports, "supports")
-        nx.set_node_attributes(G, attacks, "attacks")
+        nx.set_node_attributes(G, supports, "supported_by")
+        nx.set_node_attributes(G, attacks, "attacked_by")
         nx.set_edge_attributes(G, edge_colors, "edge_color")
         nx.set_edge_attributes(G, edge_weights, "edge_weight")
         nx.set_edge_attributes(G, edge_type, "edge_type")
 
         graph = from_networkx(G, pos_nodes)
+
+        print(custom_graph.toJSON())
 
         tap_tool_callback = CustomJS(args=dict(custom_graph=custom_graph.toJSON()), code = """
             console.log("inside tap tool callback")
@@ -188,8 +190,8 @@ class SimpleVisualizer(Visualiser):
             console.log(graph["edges"])
         """)
 
-        node_hover_tool = HoverTool(tooltips=[("index", "@index"), ("supports", "@supports"), ("attacks", "@attacks")],\
-            renderers=[graph.node_renderer])
+        node_hover_tool = HoverTool(tooltips=[("index", "@index"), ("supported_by", "@supported_by"),
+                                              ("attacked_by", "@attacked_by")], renderers=[graph.node_renderer])
         edge_hover_tool = HoverTool(tooltips=[("edge_weight", "@edge_weight"), ("edge_type", "@edge_type")],
                                     renderers=[graph.edge_renderer], line_policy='interp')
         custom_tap_tool = TapTool(callback = tap_tool_callback, behavior='inspect')
@@ -200,9 +202,9 @@ class SimpleVisualizer(Visualiser):
                         BoxZoomTool(), ResetTool(), PanTool(), WheelZoomTool())
 
         graph.node_renderer.data_source.data['transparency'] = transparency
-        graph.edge_renderer.glyph = MultiLine(line_color="edge_color", line_alpha=0, line_width="edge_weight")
+        graph.edge_renderer.glyph = MultiLine(line_color="edge_color", line_alpha=1.0, line_width="edge_weight")
         graph.node_renderer.glyph = Circle(size=35, fill_color=Spectral4[0], \
-                                            fill_alpha='transparency', line_alpha='transparency')
+                                            fill_alpha=1.0, line_alpha=1.0)
 
         plot.renderers.append(graph)
 
