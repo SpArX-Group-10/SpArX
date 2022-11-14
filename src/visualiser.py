@@ -177,8 +177,8 @@ class SimpleVisualizer(Visualiser):
         nx.set_edge_attributes(G, edge_type, "edge_type")
 
         graph = from_networkx(G, pos_nodes)
-
-        print(custom_graph.toJSON())
+        with open("graph.json", "w") as outfile:
+            outfile.write(custom_graph.toJSON())
 
         tap_tool_callback = CustomJS(args=dict(custom_graph=custom_graph.toJSON()), code = """
             console.log("inside tap tool callback")

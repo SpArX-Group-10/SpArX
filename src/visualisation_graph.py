@@ -52,10 +52,10 @@ class Node:
         supporting_nodes, attacking_nodes = self.get_support_attack_nodes()
         json_dict = {}
         json_dict["id"] = self.idx
-        json_dict["position"] = {"x": round(self.x * SCALING_FACTOR, 1) , "y": round(self.y * SCALING_FACTOR, 1)}
+        json_dict["position"] = {"x": float(round(self.x * SCALING_FACTOR, 1)) , "y": float(round(self.y * SCALING_FACTOR, 1))}
         json_dict["layer"] = self.layer
         json_dict["label"] = self.label
-        json_dict["incoming"] = self.incoming
+        #json_dict["incoming"] = self.incoming
         json_dict["supporting_nodes"] = supporting_nodes
         json_dict["attacking_nodes"] = attacking_nodes
         return json_dict
@@ -79,7 +79,7 @@ class Edge:
         json_dict = {}
         json_dict["start_node"] = self.start_node.idx
         json_dict["end_node"] = self.end_node.idx
-        json_dict["weight"] = self.weight
+        json_dict["weight"] = float(self.weight)
         json_dict["edge_type"] = self.edge_type.name
         return json_dict
 
@@ -117,4 +117,4 @@ class Graph:
         for edge in self.edges:
             edge_arr.append(edge.toDict())
 
-        return json.dumps(str({"nodes": node_arr, "edges": edge_arr}))
+        return json.dumps({"nodes": node_arr, "edges": edge_arr})
