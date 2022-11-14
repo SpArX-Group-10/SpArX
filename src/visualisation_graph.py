@@ -119,4 +119,4 @@ class Graph:
         for edge in self.edges:
             edge_arr.append(edge.toDict())
 
-        return json.dumps({"nodes": node_arr, "edges": edge_arr})
+        return json.dumps(str({"nodes": node_arr, "edges": edge_arr}))
