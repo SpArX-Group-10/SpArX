@@ -2,11 +2,11 @@ from abc import abstractmethod
 from typing import Optional
 
 import networkx as nx
-from bokeh.io import output_file, show
-from bokeh.plotting import from_networkx
-from bokeh.models import (BoxZoomTool, HoverTool, Plot, ResetTool, PanTool, \
-                            WheelZoomTool, MultiLine, Circle, TapTool, CustomJS)
-from bokeh.palettes import Spectral4
+# from bokeh.io import output_file, show
+# from bokeh.plotting import from_networkx
+# from bokeh.models import (BoxZoomTool, HoverTool, Plot, ResetTool, PanTool, \
+#                             WheelZoomTool, MultiLine, Circle, TapTool, CustomJS)
+# from bokeh.palettes import Spectral4
 
 from ffnn import FFNN
 from visualisation_graph import (Edge, Graph, Node, Layer)
@@ -149,9 +149,9 @@ class SimpleVisualizer(Visualiser):
         """
 
         # TODO: add layer as return value if needed
-        (G, custom_graph, pos_nodes, custom_graph_layers) = SimpleVisualizer._generate_networkx_model(mlp, features)
+        (_, custom_graph, _, _) = SimpleVisualizer._generate_networkx_model(mlp, features)
         # STATIC SERVE?
-        graph = from_networkx(G, pos_nodes)
+        # graph = from_networkx(G, pos_nodes)
         with open("graph.json", "w") as outfile:
             outfile.write(custom_graph.toJSON())
         # FOR COMM
@@ -216,4 +216,3 @@ class SimpleVisualizer(Visualiser):
 
         # output_file("networkx_graph.html")
         # show(plot, sizing_mode='stretch_both')
-
