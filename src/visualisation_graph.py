@@ -34,7 +34,6 @@ class Node:
 
     def get_support_attack_nodes(self) -> tuple[list[str], list[str]]:
         """Get support nodes."""
-        print(self.incoming)
         supports = [label for label, w in self.incoming.items() if w > 0]
         attacks = [label for label, w in self.incoming.items() if w < 0]
         return supports, attacks
@@ -119,4 +118,4 @@ class Graph:
         for edge in self.edges:
             edge_arr.append(edge.toDict())
 
-        return json.dumps(str({"nodes": node_arr, "edges": edge_arr}))
+        return json.dumps({"nodes": node_arr, "edges": edge_arr})

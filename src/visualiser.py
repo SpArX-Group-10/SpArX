@@ -150,6 +150,7 @@ class SimpleVisualizer(Visualiser):
 
         # TODO: add layer as return value if needed
         (_, custom_graph, _, _) = SimpleVisualizer._generate_networkx_model(mlp, features)
+        get_attack_support_by_node(custom_graph)
         # STATIC SERVE?
         # graph = from_networkx(G, pos_nodes)
         with open("graph.json", "w") as outfile:
