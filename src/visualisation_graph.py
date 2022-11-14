@@ -52,7 +52,7 @@ class Node:
         supporting_nodes, attacking_nodes = self.get_support_attack_nodes()
         json_dict = {}
         json_dict["id"] = self.idx
-        json_dict["position"] = {"x": float(round(self.x * SCALING_FACTOR, 1)) , "y": float(round(self.y * SCALING_FACTOR, 1))}
+        json_dict["position"] = {"x": round(self.x * SCALING_FACTOR, 1) , "y": round(self.y * SCALING_FACTOR, 1)}
         json_dict["layer"] = self.layer
         json_dict["label"] = self.label
         #json_dict["incoming"] = self.incoming
