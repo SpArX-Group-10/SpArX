@@ -141,7 +141,7 @@ class SimpleVisualizer(Visualiser):
         return (G, graph, new_pos_nodes, layers)
 
     @staticmethod
-    def visualise(mlp: FFNN, features: Optional[list[str]] = None) -> None:
+    def visualise(mlp: FFNN, features: Optional[list[str]] = None) -> str:
         """ Generate interactive visualisation using networkx and bokeh.
         :params
             mlp: FFNN
@@ -149,64 +149,65 @@ class SimpleVisualizer(Visualiser):
         """
         # TODO: add layer as return value if needed
         (G, custom_graph, pos_nodes, custom_graph_layers) = SimpleVisualizer._generate_networkx_model(mlp, features)
+        return custom_graph.toJSON()
+
+        # num_nodes = len(custom_graph.nodes)
+        # last_layer_nodes = len(custom_graph_layers[len(custom_graph_layers) - 1].nodes)
+        # transparency = [0] * (num_nodes - last_layer_nodes) + [1] * last_layer_nodes
+
+        # ATTACK, SUPPORT = "red", "green"
+        # edge_colors = {}
+        # edge_weights = {}
+        # edge_type = {}
+        # for start_node_idx, end_node_idx, d in G.edges(data=True):
+        #     edge_colors[(start_node_idx, end_node_idx)] = ATTACK if d['weight'] < 0 else SUPPORT
+        #     edge_weights[(start_node_idx, end_node_idx)] = d['weight']
+        #     edge_type[(start_node_idx, end_node_idx)] = "Attack" if d['weight'] < 0 else "Support"
+
+        # supports, attacks = get_attack_support_by_node(custom_graph)
+
+        # supports = {label: ', '.join(supporting_nodes) for (label, supporting_nodes) in supports.items()}
+        # attacks = {label: ', '.join(attacking_nodes) for (label, attacking_nodes) in attacks.items()}
 
 
-        num_nodes = len(custom_graph.nodes)
-        last_layer_nodes = len(custom_graph_layers[len(custom_graph_layers) - 1].nodes)
-        transparency = [0] * (num_nodes - last_layer_nodes) + [1] * last_layer_nodes
+        # nx.set_node_attributes(G, supports, "supported_by")
+        # nx.set_node_attributes(G, attacks, "attacked_by")
+        # nx.set_edge_attributes(G, edge_colors, "edge_color")
+        # nx.set_edge_attributes(G, edge_weights, "edge_weight")
+        # nx.set_edge_attributes(G, edge_type, "edge_type")
 
-        ATTACK, SUPPORT = "red", "green"
-        edge_colors = {}
-        edge_weights = {}
-        edge_type = {}
-        for start_node_idx, end_node_idx, d in G.edges(data=True):
-            edge_colors[(start_node_idx, end_node_idx)] = ATTACK if d['weight'] < 0 else SUPPORT
-            edge_weights[(start_node_idx, end_node_idx)] = d['weight']
-            edge_type[(start_node_idx, end_node_idx)] = "Attack" if d['weight'] < 0 else "Support"
+        # graph = from_networkx(G, pos_nodes)
 
-        supports, attacks = get_attack_support_by_node(custom_graph)
+        # print(custom_graph.toJSON())
 
-        supports = {label: ', '.join(supporting_nodes) for (label, supporting_nodes) in supports.items()}
-        attacks = {label: ', '.join(attacking_nodes) for (label, attacking_nodes) in attacks.items()}
+        # tap_tool_callback = CustomJS(args=dict(custom_graph=custom_graph.toJSON()), code = """
+        #     console.log("inside tap tool callback")
+        #     console.log(render_graph)
+        #     const graph = JSON.parse(custom_graph);
+        #     nodes = graph["nodes"]
+        #     edges = graph["edges"]
+        #     console.log(graph["nodes"])
+        #     console.log(graph["edges"])
+        # """)
 
+        # node_hover_tool = HoverTool(tooltips=[("index", "@index"), ("supported_by", "@supported_by"),
+        #                                       ("attacked_by", "@attacked_by")], renderers=[graph.node_renderer])
+        # edge_hover_tool = HoverTool(tooltips=[("edge_weight", "@edge_weight"), ("edge_type", "@edge_type")],
+        #                             renderers=[graph.edge_renderer], line_policy='interp')
+        # custom_tap_tool = TapTool(callback = tap_tool_callback, behavior='inspect')
 
-        nx.set_node_attributes(G, supports, "supported_by")
-        nx.set_node_attributes(G, attacks, "attacked_by")
-        nx.set_edge_attributes(G, edge_colors, "edge_color")
-        nx.set_edge_attributes(G, edge_weights, "edge_weight")
-        nx.set_edge_attributes(G, edge_type, "edge_type")
+        # plot = Plot(sizing_mode='scale_both')
 
-        graph = from_networkx(G, pos_nodes)
+        # plot.add_tools(node_hover_tool, edge_hover_tool, custom_tap_tool, \
+        #                 BoxZoomTool(), ResetTool(), PanTool(), WheelZoomTool())
 
-        print(custom_graph.toJSON())
+        # graph.node_renderer.data_source.data['transparency'] = transparency
+        # graph.edge_renderer.glyph = MultiLine(line_color="edge_color", line_alpha=1.0, line_width="edge_weight")
+        # graph.node_renderer.glyph = Circle(size=35, fill_color=Spectral4[0], \
+        #                                     fill_alpha=1.0, line_alpha=1.0)
 
-        tap_tool_callback = CustomJS(args=dict(custom_graph=custom_graph.toJSON()), code = """
-            console.log("inside tap tool callback")
-            console.log(render_graph)
-            const graph = JSON.parse(custom_graph);
-            nodes = graph["nodes"]
-            edges = graph["edges"]
-            console.log(graph["nodes"])
-            console.log(graph["edges"])
-        """)
+        # plot.renderers.append(graph)
 
-        node_hover_tool = HoverTool(tooltips=[("index", "@index"), ("supported_by", "@supported_by"),
-                                              ("attacked_by", "@attacked_by")], renderers=[graph.node_renderer])
-        edge_hover_tool = HoverTool(tooltips=[("edge_weight", "@edge_weight"), ("edge_type", "@edge_type")],
-                                    renderers=[graph.edge_renderer], line_policy='interp')
-        custom_tap_tool = TapTool(callback = tap_tool_callback, behavior='inspect')
+        # output_file("networkx_graph.html")
+        # show(plot, sizing_mode='stretch_both')
 
-        plot = Plot(sizing_mode='scale_both')
-
-        plot.add_tools(node_hover_tool, edge_hover_tool, custom_tap_tool, \
-                        BoxZoomTool(), ResetTool(), PanTool(), WheelZoomTool())
-
-        graph.node_renderer.data_source.data['transparency'] = transparency
-        graph.edge_renderer.glyph = MultiLine(line_color="edge_color", line_alpha=1.0, line_width="edge_weight")
-        graph.node_renderer.glyph = Circle(size=35, fill_color=Spectral4[0], \
-                                            fill_alpha=1.0, line_alpha=1.0)
-
-        plot.renderers.append(graph)
-
-        output_file("networkx_graph.html")
-        show(plot, sizing_mode='stretch_both')

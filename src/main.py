@@ -90,7 +90,7 @@ def main():
 
 
     # Phase 3
-    VISUALISER.visualise(merged_model, input_names)
+    return VISUALISER.visualise(merged_model, input_names)
 
 
 if __name__ == "__main__":
