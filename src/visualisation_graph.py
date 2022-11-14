@@ -11,7 +11,7 @@ class EdgeType(Enum):
 class Node:
     """The building block of a neural network."""
 
-    def __init__(self, idx: int, x: float, y: float, label, layer: int,
+    def __init__(self, idx: int, x: float, y: float, label: str, layer: int,
                  incoming=None):  # pylint: disable=dangerous-default-value
         """Initialize node."""
         if incoming is None:
@@ -55,7 +55,7 @@ class Node:
         json_dict["position"] = {"x": round(self.x * SCALING_FACTOR, 1) , "y": round(self.y * SCALING_FACTOR, 1)}
         json_dict["layer"] = self.layer
         json_dict["label"] = self.label
-        json_dict["incoming"] = self.incoming
+        #json_dict["incoming"] = self.incoming
         json_dict["supporting_nodes"] = supporting_nodes
         json_dict["attacking_nodes"] = attacking_nodes
         return json_dict
@@ -68,6 +68,7 @@ class Edge:
         self.start_node = start_node
         self.end_node = end_node
         self.weight = weight
+        self.layer = start_node.layer
         self.edge_type = EdgeType.ATTACK if weight < 0 else EdgeType.SUPPORT
 
     def __repr__(self) -> str:
@@ -79,7 +80,8 @@ class Edge:
         json_dict = {}
         json_dict["start_node"] = self.start_node.idx
         json_dict["end_node"] = self.end_node.idx
-        json_dict["weight"] = self.weight
+        json_dict["layer"] = self.layer
+        json_dict["weight"] = float(self.weight)
         json_dict["edge_type"] = self.edge_type.name
         return json_dict
 
@@ -117,4 +119,4 @@ class Graph:
         for edge in self.edges:
             edge_arr.append(edge.toDict())
 
-        return json.dumps(str({"nodes": node_arr, "edges": edge_arr}))
+        return json.dumps({"nodes": node_arr, "edges": edge_arr})

@@ -28,9 +28,9 @@ def generate_nodes(mlp_idx_range: list[tuple[int]], edges: list[tuple[int, int, 
             name = attr_names.get(n)
             new_node = None
             if layer == 0:
-                new_node = Node(n, x_pos, y_pos, name, i+1, {name: 1.0})
+                new_node = Node(n, x=x_pos, y=y_pos, label=name, layer=0, incoming={name: 1.0})
             else:
-                new_node = Node(n, x_pos, y_pos, name, i+1)
+                new_node = Node(n, x=x_pos, y=y_pos, label=name, layer=layer)
             nodes.update({name: new_node})
             layer_nodes.append(new_node)
             edges = [(new_node, end, w) if start == n else (start, end, w) for start, end, w in edges]
@@ -147,8 +147,14 @@ class SimpleVisualizer(Visualiser):
             mlp: FFNN
                 the network to be visualised
         """
+
         # TODO: add layer as return value if needed
         (G, custom_graph, pos_nodes, custom_graph_layers) = SimpleVisualizer._generate_networkx_model(mlp, features)
+        # STATIC SERVE?
+        graph = from_networkx(G, pos_nodes)
+        with open("graph.json", "w") as outfile:
+            outfile.write(custom_graph.toJSON())
+        # FOR COMM
         return custom_graph.toJSON()
 
         # num_nodes = len(custom_graph.nodes)
