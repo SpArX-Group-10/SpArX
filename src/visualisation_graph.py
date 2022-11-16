@@ -34,6 +34,7 @@ class Node:
 
     def get_support_attack_nodes(self) -> tuple[list[str], list[str]]:
         """Get support nodes."""
+        self.incoming = dict(sorted(self.incoming.items(), key = lambda item: item[1]))
         supports = [label for label, w in self.incoming.items() if w > 0]
         attacks = [label for label, w in self.incoming.items() if w < 0]
         return supports, attacks
@@ -54,7 +55,7 @@ class Node:
         json_dict["position"] = {"x": round(self.x * SCALING_FACTOR, 1) , "y": round(self.y * SCALING_FACTOR, 1)}
         json_dict["layer"] = self.layer
         json_dict["label"] = self.label
-        #json_dict["incoming"] = self.incoming
+        json_dict["incoming"] = {k: float(v) for k, v in self.incoming.items()}
         json_dict["supporting_nodes"] = supporting_nodes
         json_dict["attacking_nodes"] = attacking_nodes
         return json_dict
