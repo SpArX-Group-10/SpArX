@@ -2,13 +2,17 @@ from enum import Enum, auto
 
 import keras
 
+
 class Framework(Enum):
     """Framework enum"""
+
     KERAS = auto()
     PYTORCH = auto()
 
+
 class EncodedModel:
     """Encoded model class."""
+
     def __init__(self, num_layers, layer_shapes, weights, biases, activation_functions):
         self.num_layers = num_layers
         self.layer_shapes = layer_shapes
@@ -16,14 +20,16 @@ class EncodedModel:
         self.biases = biases
         self.activation_functions = activation_functions
 
+
 class Model:
     """Model class"""
+
     @staticmethod
     def transform(model: any, framework: Framework):
         """Transform model to encoded form."""
         match framework:
             case Framework.KERAS:
-            # Transformation
+                # Transformation
                 return Model.get_keras_model_info(model)
             case _:
                 raise NotImplementedError("Framework not supported!")
@@ -57,7 +63,7 @@ class Model:
         for layer in layers:
             layer_shapes.append(layer.output_shape)
 
-        # if keras don't use numpy in the future, we change this part
+            # if keras don't use numpy in the future, we change this part
             weight = layer.get_weights()[0]
             bias = layer.get_weights()[1]
             weights.append(weight)
