@@ -147,4 +147,3 @@ class SimpleVisualizer(Visualiser):
 
         # FOR COMM
         return custom_graph.toJSON()
-
