@@ -1,14 +1,8 @@
-import os
 import numpy as np
-from sklearn.model_selection import train_test_split
-import pandas as pd
 
-from .clustering import KMeansClusterer
-from .model_encoder import Framework, Model
+from .model_encoder import Model
 from .ffnn import FFNN
-from .user_input import import_dataset, get_ffnn_model_general, net_train
 from .merging import LocalMerger
-from .visualiser import SimpleVisualizer
 
 
 def main(xdata, model, framework, clusterer, merger, visualiser, datapoint, shrink_factor):
@@ -40,7 +34,3 @@ def main(xdata, model, framework, clusterer, merger, visualiser, datapoint, shri
 
     # Phase 3
     return visualiser.visualise(merged_model, xdata.columns.to_numpy())
-
-
-if __name__ == "__main__":
-    main()
