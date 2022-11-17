@@ -33,7 +33,7 @@ def main(xdata, model, framework, clusterer, merger, visualiser, datapoint, shri
     cluster_labels = clusterer.cluster(base_ffnn, shrink_factor)
 
     if merger is LocalMerger:
-        base_ffnn.forward_pass(np.array(datapoint))
+        base_ffnn.forward_pass(np.array([datapoint]))
 
     # merge clusters
     merged_model = merger.merge(base_ffnn, cluster_labels)
