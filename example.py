@@ -10,18 +10,20 @@ SHRINK_TO_PERCENTAGE = 0.5
 
 shape = (4, 6, 6, 3)
 
-model = Sequential([
-    Dense(shape[1], activation='relu', input_shape=(shape[0],)),
-    Dense(shape[2], activation='relu'),
-    Dense(shape[3], activation='relu'),
-])
+model = Sequential(
+    [
+        Dense(shape[1], activation="relu", input_shape=(shape[0],)),
+        Dense(shape[2], activation="relu"),
+        Dense(shape[3], activation="relu"),
+    ]
+)
 
 
 weights = [layer.get_weights()[0] for layer in model.layers]
 bias = [layer.get_weights()[1] for layer in model.layers]
 
 # Todo: figure this out
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
 
 
 activations = ["relu"] * 3
