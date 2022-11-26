@@ -12,3 +12,7 @@ pyvenv.cfg
 .idea/*
 
 networkx_graph.html
+
+build
+dist
+*.egg-info
