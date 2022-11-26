@@ -10,3 +10,5 @@ results
 /Scripts
 pyvenv.cfg
 .idea/*
+
+networkx_graph.html

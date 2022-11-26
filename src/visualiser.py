@@ -1,9 +1,14 @@
 from abc import abstractmethod
 from typing import Optional
 import networkx as nx
+from bokeh.io import output_file, show
+from bokeh.plotting import from_networkx
+from bokeh.models import (BoxZoomTool, HoverTool, Plot, ResetTool, PanTool, WheelZoomTool, MultiLine, Circle)
+from bokeh.palettes import Spectral4
 
 from .ffnn import FFNN
 from .visualisation_graph import (Edge, Graph, Node, Layer)
+
 
 def generate_nodes(mlp_idx_range: list[tuple[int]], edges: list[tuple[int, int, float]], attr_names: list[str]=None) \
                   -> tuple[dict, dict[str, Node], list[Edge], list[Layer]]:
@@ -96,7 +101,7 @@ class Visualiser:
         """
         raise NotImplementedError
 
-class SimpleVisualizer(Visualiser):
+class JSONVisualizer(Visualiser):
     """ Generates a basic representation of the clustered model using networkx """
     @staticmethod
     def _generate_networkx_model(mlp: FFNN, attr_names: list[str]=None) \
@@ -142,8 +147,100 @@ class SimpleVisualizer(Visualiser):
         """
 
         # TODO: add layer as return value if needed
-        (_, custom_graph, _, _) = SimpleVisualizer._generate_networkx_model(mlp, features)
+        (_, custom_graph, _, _) = JSONVisualizer._generate_networkx_model(mlp, features)
         get_attack_support_by_node(custom_graph)
 
         # FOR COMM
         return custom_graph.toJSON()
+
+
+class BokehVisualizer(Visualiser):
+    """ Generates a basic representation of the clustered model using networkx """
+    @staticmethod
+    def _generate_networkx_model(mlp: FFNN, attr_names: list[str]=None) \
+                                -> tuple[nx.DiGraph, Graph, dict, list[Layer]]:
+        G = nx.DiGraph()
+
+        mlp_shapes = mlp.get_shape()
+        mlp_idx_range = []
+
+        # calculate the offset in a list from start to end
+        offset = 0
+        for shape in mlp_shapes:
+            mlp_idx_range.append((offset, offset + shape))
+            offset = offset + shape
+
+        if attr_names is None:
+            attr_names = [f"X{idx}" for idx in range(mlp_shapes[0])]
+        else:
+            assert len(attr_names) == mlp_shapes[0]
+
+        # loop through the weights of each layer and add them to the graph
+        # TODO: edges
+        edges = generate_weights(mlp, G, mlp_idx_range)
+
+        # relabel the nodes with corresponding arguments
+        new_labels = relabel_nodes(mlp_idx_range, attr_names)
+
+        # calculate the position of each node, along with the custom object edges and layers
+        pos_nodes, nodes, vis_graph_edges, layers = generate_nodes(mlp_idx_range, edges, new_labels)
+
+        graph = Graph(nodes, vis_graph_edges)
+
+        G = nx.relabel_nodes(G, new_labels)
+        new_pos_nodes = {new_labels[node]: pos for (node, pos) in pos_nodes.items()}
+
+        return (G, graph, new_pos_nodes, layers)
+
+    @staticmethod
+    def visualise(mlp: FFNN, features: Optional[list[str]] = None) -> None:
+        """ Generate interactisve visualisation using networkx and bokeh.
+        :params
+            mlp: FFNN
+                the network to be visualised
+        """
+        # TODO: add layer as return value if needed
+        (G, graph, pos_nodes, _) = BokehVisualizer._generate_networkx_model(mlp, features)
+
+        ATTACK, SUPPORT = "red", "green"
+        edge_colors = {}
+        edge_weights = {}
+        edge_type = {}
+        for start_node_idx, end_node_idx, d in G.edges(data=True):
+            edge_colors[(start_node_idx, end_node_idx)] = ATTACK if d['weight'] < 0 else SUPPORT
+            edge_weights[(start_node_idx, end_node_idx)] = d['weight']
+            edge_type[(start_node_idx, end_node_idx)] = "Attack" if d['weight'] < 0 else "Support"
+
+        supports, attacks = get_attack_support_by_node(graph)
+
+        supports = {label: ', '.join(supporting_nodes) for (label, supporting_nodes) in supports.items()}
+        attacks = {label: ', '.join(attacking_nodes) for (label, attacking_nodes) in attacks.items()}
+
+
+        nx.set_node_attributes(G, supports, "supports")
+        nx.set_node_attributes(G, attacks, "attacks")
+        nx.set_edge_attributes(G, edge_colors, "edge_color")
+        nx.set_edge_attributes(G, edge_weights, "edge_weight")
+        nx.set_edge_attributes(G, edge_type, "edge_type")
+
+        graph = from_networkx(G, pos_nodes)
+
+        node_hover_tool = HoverTool(tooltips=[("index", "@index"), ("supports", "@supports"), ("attacks", "@attacks")],\
+            renderers=[graph.node_renderer])
+        edge_hover_tool = HoverTool(tooltips=[("edge_weight", "@edge_weight"), ("edge_type", "@edge_type")],
+                                    renderers=[graph.edge_renderer], line_policy='interp')
+
+
+        # plot = Plot(width=WIDTH, height=HEIGHT, x_range=Range1d(-1.1, 1.1),
+        #             y_range=Range1d(-1.1, 1.1), sizing_mode='scale_both')
+        plot = Plot(sizing_mode='scale_both')
+
+
+        plot.add_tools(node_hover_tool, edge_hover_tool, BoxZoomTool(), ResetTool(), PanTool(), WheelZoomTool())
+
+        graph.edge_renderer.glyph = MultiLine(line_color="edge_color", line_alpha=0.8, line_width="edge_weight")
+        graph.node_renderer.glyph = Circle(size=35, fill_color=Spectral4[0])
+        plot.renderers.append(graph)
+
+        output_file("networkx_graph.html")
+        show(plot, sizing_mode='stretch_both')

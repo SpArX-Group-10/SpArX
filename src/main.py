@@ -13,7 +13,7 @@ def main(xdata, model, framework, clusterer, merger, visualiser, datapoint, shri
     # encode model
     encoded_model = Model.transform(model, framework)
 
-    layer_shape = [xdata.shape[1]] + [size for [_, size] in encoded_model.layer_shapes]
+    layer_shape = tuple([xdata.shape[1]] + [size for [_, size] in encoded_model.layer_shapes])
 
     # custom model
     base_ffnn = FFNN(layer_shape, encoded_model.weights, encoded_model.biases, encoded_model.activation_functions)
