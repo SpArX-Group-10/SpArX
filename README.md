@@ -8,7 +8,7 @@ The python version is 3.10.0.
 
 # Example
 
-````python
+```python
 from keras.models import Sequential
 from keras.layers import Dense
 import numpy as np
@@ -53,5 +53,5 @@ merged_model = LocalMerger.merge(restored_model, cluster_labels)
 restored_model.model.summary()
 merged_model.model.summary()
 
-BokehVisualizer.visualise(merged_model)```
-````
+BokehVisualizer.visualise(merged_model)
+```
