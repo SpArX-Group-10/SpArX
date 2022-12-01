@@ -4,8 +4,8 @@ from keras.layers import Activation, Dense, Input
 # import numpy as np
 # from sklearn.model_selection import train_test_split
 # import tensorflow as tf
-from user_input import import_dataset, import_model, Framework, verify_keras_model_is_fnn
-from user_input import train_model, get_ffnn_model_general #, net_train, recall_m, precision_m
+from sparx import import_dataset, import_model, Framework, verify_keras_model_is_fnn
+from sparx import train_model, get_ffnn_model_general #, net_train, recall_m, precision_m
 
 
 # Testing approach 1: importing a model

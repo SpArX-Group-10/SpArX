@@ -4,7 +4,7 @@ from keras.layers import Dense
 import tensorflow as tf
 import pytest
 
-from src import FFNN, KMeansClusterer
+from sparx import FFNN, KMeansClusterer
 from .benchmark import BenchmarkData, create_benchmark_data
 
 

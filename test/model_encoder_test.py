@@ -2,7 +2,7 @@ import pytest
 import keras
 from keras.models import Sequential
 from keras.layers import Dense, Input
-from model_encoder import Model, Framework
+from sparx import Framework, Model
 
 def test_get_keras_model_info():
     """Test model info encoding."""
