@@ -1,5 +1,5 @@
-import setuptools
 import os
+import setuptools
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
