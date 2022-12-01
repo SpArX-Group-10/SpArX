@@ -1,5 +1,3 @@
-from enum import Enum, auto
-
 # Model Creation
 from typing import Optional
 import keras
