@@ -10,6 +10,7 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 import pandas as pd
 from pandas import DataFrame
+from .model_encoder import Framework
 
 # hidden layers
 HIDDEN_LAYERS = [50, 50]
@@ -17,12 +18,6 @@ HIDDEN_LAYERS = [50, 50]
 EPOCHS = 1000
 PATIENCE = 30
 BATCH_SIZE = 64
-
-
-class Framework(Enum):
-    """Framework enum."""
-    KERAS = auto()
-
 
 def import_model(framework: Framework, model: any) -> keras.Model:
     """Approach 1: User inputs a pre-trained model"""
