@@ -13,7 +13,7 @@ with open(requirements_path, "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="sparx-lib",
-    version="1.0.0",
+    version="1.0.1",
     author="Sparx Group",
     author_email="",
     description="Sparx Implementation",
