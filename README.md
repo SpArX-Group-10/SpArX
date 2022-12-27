@@ -6,6 +6,20 @@
 
 The python version is 3.10.0.
 
+# Getting started
+
+1.  Clone repo from: [https://github.com/SpArX-Group-10/SpArX](https://github.com/SpArX-Group-10/SpArX)
+
+    ```bash
+    git clone https://github.com/SpArX-Group-10/SpArX
+    ```
+
+2.  Install requirements:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
 # Example
 
 ```python
