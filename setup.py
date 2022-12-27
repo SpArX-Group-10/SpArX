@@ -12,7 +12,7 @@ with open(requirements_path, "r", encoding="utf-8") as fh:
     requirements = fh.readlines()
 
 setuptools.setup(
-    name="sparx",
+    name="sparx-lib",
     version="1.0.0",
     author="Sparx Group",
     author_email="",
