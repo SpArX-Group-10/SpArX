@@ -45,7 +45,7 @@ model = Sequential([
 weights = [layer.get_weights()[0] for layer in model.layers]
 bias = [layer.get_weights()[1] for layer in model.layers]
 
-# Todo: figure this out
+
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
 
@@ -67,5 +67,6 @@ merged_model = LocalMerger.merge(restored_model, cluster_labels)
 restored_model.model.summary()
 merged_model.model.summary()
 
+# Bokeh Visualizer - to visualise neural networks locally
 BokehVisualizer.visualise(merged_model)
 ```
