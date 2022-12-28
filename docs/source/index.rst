@@ -10,7 +10,12 @@ Welcome to SpArX's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   modules
+   clustering
+   ffnn
+   merging
+   model_encoder
+   user_input
+   vis_graph
 
 Indices and tables
 ==================
