@@ -20,14 +20,6 @@ sparx.ffnn module
    :undoc-members:
    :show-inheritance:
 
-sparx.main module
------------------
-
-.. automodule:: sparx.main
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 sparx.merging module
 --------------------
 
@@ -56,14 +48,6 @@ sparx.visualisation\_graph module
 ---------------------------------
 
 .. automodule:: sparx.visualisation_graph
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-sparx.visualiser module
------------------------
-
-.. automodule:: sparx.visualiser
    :members:
    :undoc-members:
    :show-inheritance:
