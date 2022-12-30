@@ -47,8 +47,7 @@ class Clusterer:
         :type seed: Optional[int], optional
         :return: a list of labels for each layer of the network
         :rtype: list[np.ndarray]
-        """        
-
+        """
         clustering_labels = []
         ffnn_shape = mlp.get_shape()
         for index in range(1, len(mlp.model.layers)):

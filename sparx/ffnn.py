@@ -88,7 +88,7 @@ class FFNN:
         :type bias: np.ndarray
         :param activation_function: activation function to use in keras format
         :type activation_function: str
-        """        
+        """
         # add the new activaiton function
         self.activation_functions.append(activation_function)
 
@@ -107,6 +107,5 @@ class FFNN:
 
         :return: tuple with sizes of each layer
         :rtype: tuple[int]
-        """        
-        
+        """
         return (self.model.layers[0].input_shape[1], ) + tuple(layers.output_shape[1] for layers in self.model.layers)

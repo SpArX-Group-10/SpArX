@@ -15,7 +15,7 @@ class Merger:
         :type mlp: FFNN
         :param cluster_labels: cluster labels for each layer of the network
         :type cluster_labels: np.ndarray
-        :raises NotImplementedError: 
+        :raises NotImplementedError:
         :return: resulting MLP model with clustered layers
         :rtype: FFNN
         """
