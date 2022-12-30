@@ -12,32 +12,24 @@ class Clusterer:
     @staticmethod
     @abstractmethod
     def cluster_layer(num_clusters: int, data: np.ndarray, seed: Optional[int]=None) -> np.ndarray:
-        """Clusters the given model.
+        """Clusters the given layer
 
-        :param
-            num_clusters: int
-                the number of clusters to create.
-            data: np.ndarray
-                the data to cluster from each layer.
-            seed: Optional[int]
-                the seed to use to cluster the current layer
-
-        :returns
-            the label for that layer
+        :param num_clusters: the number of clusters to create
+        :type num_clusters: int
+        :param data: the data to cluster from each layer
+        :type data: np.ndarray
+        :param seed: the seed to use to cluster the current layer, defaults to None
+        :type seed: Optional[int], optional
+        :raises NotImplementedError:
+        :return: the label for that layer
+        :rtype: np.ndarray
         """
         raise NotImplementedError
 
 
     @staticmethod
     def _relabel_cluster(clusters_labels: np.ndarray) -> np.ndarray:
-        """Relable the cluster labels to avoid gaps within the labels
-
-        :params
-            clusters_labels: np.ndarray
-                the cluster to be relabeld
-
-        :returns
-            reclustered labels
+        """Relabel the cluster labels to avoid gaps within the labels
         """
         _, new_labels = np.unique(clusters_labels, return_inverse=True)
         return new_labels
@@ -45,21 +37,17 @@ class Clusterer:
 
     @classmethod
     def cluster(cls, mlp: FFNN, shrink_to_percentage: float, seed: Optional[int]=None) -> list[np.ndarray]:
-        """Clusters the given model.
+        """Clusters the given model
 
-        :param
-            mlp: FFNN
-                the mlp model to be clustered
-            shrink_to_percentage: float
-                the percentatge of the original size to shrink to.
-            data: np.ndarray
-                the data to cluster.
-            seed: Optional
-                the seed to use for the clustering algorithm.
-
-        :returns
-            a list of labels for each layer of the network
-        """
+        :param mlp: the mlp model to be clustered
+        :type mlp: FFNN
+        :param shrink_to_percentage: the percentatge of the original size to shrink to
+        :type shrink_to_percentage: float
+        :param seed: the seed to use for the clustering algorithm, defaults to None
+        :type seed: Optional[int], optional
+        :return: a list of labels for each layer of the network
+        :rtype: list[np.ndarray]
+        """        
 
         clustering_labels = []
         ffnn_shape = mlp.get_shape()

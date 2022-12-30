@@ -9,13 +9,15 @@ class Merger:
     @staticmethod
     @abstractmethod
     def merge(mlp: FFNN, cluster_labels: np.ndarray) -> FFNN:
-        """Merges the given model.
+        """Applies merge algorithm to compress layer into clustered-layer
 
-        :param
-            cluster_labels: np.ndarray
-                the labels of the clusters.
-            mlp: FFNN
-                the model to merge.
+        :param mlp: the MLP model to merge on
+        :type mlp: FFNN
+        :param cluster_labels: cluster labels for each layer of the network
+        :type cluster_labels: np.ndarray
+        :raises NotImplementedError: 
+        :return: resulting MLP model with clustered layers
+        :rtype: FFNN
         """
         raise NotImplementedError
 
@@ -98,7 +100,7 @@ class GlobalMerger(Merger):
 
 
 class LocalMerger(Merger):
-    """Merges the given model using the global merge technique."""
+    """Merges the given model using the local merge technique."""
 
     @staticmethod
     def merge(mlp: FFNN, cluster_labels: np.ndarray) -> FFNN:

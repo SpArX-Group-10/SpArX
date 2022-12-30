@@ -15,7 +15,6 @@ Welcome to SpArX's documentation!
    merging
    model_encoder
    user_input
-   vis_graph
 
 Indices and tables
 ==================

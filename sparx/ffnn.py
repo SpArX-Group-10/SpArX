@@ -7,17 +7,16 @@ class FFNN:
     """ feedforward neural network """
 
     def __init__(self, shape: tuple, weights: np.ndarray, bias: np.ndarray, activation_functions: list[str]):
-        """Initialises a feed-forward neural network with the given weights, bias and shapes.
+        """Initialises a feed-forward neural network with the given weights, bias and shapes
 
-        :param
-            shape: tuple
-                The shape of the network.
-            weights: np.ndarray
-                The weights of the network.
-            bias: np.ndarray
-                The bias of the network.
-            activation_functions: np.ndarray
-                The activation functions of the network.
+        :param shape: The shape of the network
+        :type shape: tuple
+        :param weights: The weights of the network
+        :type weights: np.ndarray
+        :param bias: The bias of the network
+        :type bias: np.ndarray
+        :param activation_functions: The activation functions of the network
+        :type activation_functions: list[str]
         """
 
         self.activation_functions = activation_functions
@@ -64,11 +63,12 @@ class FFNN:
 
 
     def forward_pass(self, inputs: np.ndarray) -> np.ndarray:
-        """ Performs a forward pass through the network and return the activated output for each layer
+        """Performs a forward pass through the network and return the activated output for each layer
 
-        :param
-            inputs: np.ndarray
-                The inputs to the network.
+        :param inputs: The inputs to the network
+        :type inputs: np.ndarray
+        :return: output labels
+        :rtype: np.ndarray
         """
 
         self.data = inputs
@@ -78,8 +78,17 @@ class FFNN:
 
 
     def add_layer(self, neuron_count : int, weights: np.ndarray, bias: np.ndarray, activation_function: str) -> None:
-        """ Extends the network with a new layer. """
+        """Extends the network with a new layer
 
+        :param neuron_count: number of neurons in layer
+        :type neuron_count: int
+        :param weights: weight matrix between previous layer in keras format
+        :type weights: np.ndarray
+        :param bias: bias matrix for new layer in keras format
+        :type bias: np.ndarray
+        :param activation_function: activation function to use in keras format
+        :type activation_function: str
+        """        
         # add the new activaiton function
         self.activation_functions.append(activation_function)
 
@@ -94,5 +103,10 @@ class FFNN:
 
 
     def get_shape(self) -> tuple[int]:
-        """ Returns the shape of the network. """
+        """Returns the shape of the network
+
+        :return: tuple with sizes of each layer
+        :rtype: tuple[int]
+        """        
+        
         return (self.model.layers[0].input_shape[1], ) + tuple(layers.output_shape[1] for layers in self.model.layers)
