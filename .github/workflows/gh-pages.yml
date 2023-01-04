@@ -7,19 +7,21 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' 
       - name: Install dependencies
         run: |
-          pip install sphinx furo
+          pip install -r requirements.txt
       - name: Sphinx build
         run: |
           cd docs
-          sphinx-build doc _build
+          make html
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/_build/
+          publish_dir: docs/build/html
           force_orphan: true
