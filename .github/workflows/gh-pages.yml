@@ -1,24 +1,25 @@
-name: Deploy documentation on GitHub Pages
+name: documentation
 on: 
   push:
     branches:
       - docs
-permissions:
-  contents: write
 jobs:
-  build-and-deploy:
+  docs:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout 
-        uses: actions/checkout@v3
-
-      - name: Install and Build 
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: Install dependencies
         run: |
           pip install -r requirements.txt
+      - name: Sphinx build
+        run: |
           cd docs
-          make html
-
+          sphinx-build doc _build
       - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          folder: docs/build/html # The folder the action should deploy.
+          publish_branch: gh-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/_build/
+          force_orphan: true
